@@ -9,4 +9,13 @@ PV_height_outer = PV_height + 2*PV_thickness
 PV_bottom_inner = -PV_height/2
 PV_bottom_outer = PV_bottom_inner - PV_thickness
 
+# Core Shroud Data
+
+Thermal_shroud_outer = TC_radius + Core_shroud_th
+Upper_shroud_bottom  = Core_bottom_position + Core_height + Flow_offset
+Upper_shroud_top     = Upper_shroud_bottom + Core_shroud_th
+shroud_extent_z      = Upper_shroud_top + -Core_bottom_position
+
+
+# Load Material Library
 pyne_mats = md.load_pyne_matlib()

@@ -20,13 +20,39 @@ class mcnp_card():
 
         return card
 
+def make_core_shroud():
+
+    string = mcnp_card()
+
+    core_shroud_cell = string.cell(600,
+        {'comment'  : 'Core_shroud', 
+         'surfs'    : [([-601, 602],[-603, 602])],
+         'material' : 'Steel, Stainless 304',
+         'imp'      : 1
+        })
+    core_shroud_surf = string.surf([
+        {'comment'  : 'Upper_shroud',
+         'type'     : 'rcc',
+         'inputs'   : [0, 0, cd.Upper_shroud_bottom, 0, 0, cd.Core_shroud_th, cd.PV_inner_radius],
+         'number'   : 601},
+        {'comment'  : 'TC_shroud_inner',
+         'type'     : 'rcc',
+         'inputs'   : [0, 0, cd.Core_bottom_position, 0, 0, cd.shroud_extent_z, cd.TC_radius],
+         'number'   : 602},
+        {'comment'  : 'TC_shroud_outer',
+         'type'     : 'rcc',
+         'inputs'   : [0, 0, cd.Core_bottom_position, 0, 0, cd.shroud_extent_z, cd.Thermal_shroud_outer],
+         'number'   : 603}])
+    
+    return core_shroud_cell, core_shroud_surf
+
 def make_core_level():
     
     string = mcnp_card()
 
     core_level_cell = string.cell(700,
         {'comment'  : 'Core Level', 
-         'surfs'    : [-802],
+         'surfs'    : [(-602, [-802, 601, 603])],
          'material' : 'Water, Liquid',
          'imp'      : 1
         })
@@ -66,14 +92,18 @@ def make_outside_world():
          'imp'      : 0
         })
     return outside_world_cell
+
 def make_structural_data():
     string = mcnp_card()
     
     data_card = string.data('material',cd.material_dict)
+
     return data_card
+
 def make_SCW():
 
     # Write cell and surface cards for each level of geometry.
+    [cell_core_shroud, surf_core_shroud] = make_core_shroud()
     cell_core_lvl                        = make_core_level()
     [cell_reactor_lvl, surf_reactor_lvl] = make_pressure_vessel()
     cell_outside_wrld                    = make_outside_world()
@@ -82,10 +112,12 @@ def make_SCW():
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
+${comm_mk}  Core shroud          \n${core_shroud_cells}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
+${comm_mk}  Core shroud          \n${core_shroud_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  MATERIAL
@@ -94,7 +126,9 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(core_level_cells    = cell_core_lvl,
+    input_str = input_tmpl.substitute(core_shroud_cells   = cell_core_shroud,
+                                      core_shroud_surfs   = surf_core_shroud,
+                                      core_level_cells    = cell_core_lvl,
                                       reactor_level_cells = cell_reactor_lvl,
                                       outside_world_cells = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
