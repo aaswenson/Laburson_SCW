@@ -131,9 +131,11 @@ def write_cell_card(number,data):
     material_num = md.material_dict[data['material']]['mat_num']
     density = cd.pyne_mats[data['material']].density
     surfaces = build_surface_tree(data['surfs'])[0]
-
-    cell_list = cut_line(' ', "{0} {1} {2} {3}".format(number,
-        material_num,-density,surfaces), data['comment'])
+    if data['material'] != 'void':
+        cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number,
+            material_num,-density,surfaces,data['imp']), data['comment'])
+    else:
+        cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, data['imp']), data['comment'])
 
     return ' '.join(cell_list)
     

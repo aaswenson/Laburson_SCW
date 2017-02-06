@@ -20,7 +20,17 @@ class mcnp_card():
 
         return card
 
-   
+def make_core_level():
+    
+    string = mcnp_card()
+
+    core_level_cell = string.cell(700,
+        {'comment'  : 'Core Level', 
+         'surfs'    : [-802],
+         'material' : 'Water, Liquid',
+         'imp'      : 1
+        })
+    return core_level_cell
 
 def make_pressure_vessel():
     
@@ -29,7 +39,8 @@ def make_pressure_vessel():
     pressure_vessel_cell = string.cell(800,
         {'comment'  : 'Pressure Vessel', 
          'surfs'    : [-801, 802],
-         'material' : 'Steel, Stainless 304'
+         'material' : 'Steel, Stainless 304',
+         'imp'      : 1
         })
     pressure_vessel_surf = string.surf([
         {'comment'  : 'outer_PV',
@@ -44,7 +55,17 @@ def make_pressure_vessel():
 
     return [pressure_vessel_cell, pressure_vessel_surf]
 
+def make_outside_world():
 
+    string = mcnp_card()
+
+    outside_world_cell = string.cell(900,
+        {'comment'  : 'Pressure Vessel', 
+         'surfs'    : [801],
+         'material' : 'void',
+         'imp'      : 0
+        })
+    return outside_world_cell
 def make_structural_data():
     string = mcnp_card()
     
@@ -53,14 +74,17 @@ def make_structural_data():
 def make_SCW():
 
     # Write cell and surface cards for each level of geometry.
+    cell_core_lvl                        = make_core_level()
     [cell_reactor_lvl, surf_reactor_lvl] = make_pressure_vessel()
-
+    cell_outside_wrld                    = make_outside_world()
     # Write general data cards.
     structural_materials = make_structural_data()
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
-${comm_mk}  Reactor level        \n${reactor_level_cells}
+${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
+${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
+${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
@@ -70,7 +94,9 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(reactor_level_cells = cell_reactor_lvl,
+    input_str = input_tmpl.substitute(core_level_cells    = cell_core_lvl,
+                                      reactor_level_cells = cell_reactor_lvl,
+                                      outside_world_cells = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       general_materials = structural_materials,
                                       comm_mk = wc.comment_mark)
