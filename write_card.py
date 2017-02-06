@@ -130,7 +130,7 @@ def apply_MCNP_operator(operator,items,state):
 def write_cell_card(number,data):
     material_num = md.material_dict[data['material']]['mat_num']
     density = cd.pyne_mats[data['material']].density
-    surfaces = build_surface_tree(data['surfs'])
+    surfaces = build_surface_tree(data['surfs'])[0]
 
     cell_list = cut_line(' ', "{0} {1} {2} {3}".format(number,
         material_num,-density,surfaces), data['comment'])
@@ -140,15 +140,21 @@ def write_cell_card(number,data):
 
 
 def write_surf_card(data):
+    surf_str = ''
     for surface in data:
-        surf_str = cut_line(' ', "{0} {1} {2}".format(surface['number'],surface['type'],
-                            ' '.join(str(surface['inputs']))),surface['comment'])
+        parameters = ''
+        for surf_data in surface['inputs']:
+            parameters += str(surf_data) + ' '
+        surf_str += ' '.join(cut_line(' ', "{0} {1} {2}".format(surface['number'],surface['type'],
+                            parameters),surface['comment']))
+    return surf_str
 
 def iterate_data_card(category,data):
     data_card = ''
     if category == 'material':
         for material in data:
-            data_card += write_material_card(material)
+            if material != 'void':
+                data_card += write_material_card(material)
     return data_card
 
 def write_material_card(material_name):
@@ -161,7 +167,6 @@ def write_material_card(material_name):
     if data['mt']:
         mt_str = "mt{0:<8} {1}".format(pyne_mat.metadata['mat_number'],data['mt'])
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
-
     return ' '.join(data_list)
 
 

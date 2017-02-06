@@ -22,9 +22,9 @@ def load_pyne_matlib():
 
 material_dict =      { "Steel, Stainless 304"             :{'mat_num':80000, 'mt':''},
                        "Water, Liquid"                    :{'mat_num':1, 'mt':'lwtr.20t'},
-                       "Carbon, Graphite (reactor grade)" :{'mat_num':1, 'mt':'grph.20t'}, 
-                       "Boron Carbide"                    :{'mat_num':1, 'mt':''},
-                       "Boral (65% Al-35% B4C)"           :{'mat_num':1, 'mt':''},
+                       "Carbon, Graphite (reactor grade)" :{'mat_num':2, 'mt':'grph.20t'}, 
+                       "Boron Carbide"                    :{'mat_num':3, 'mt':''},
+                       "Boral (65% Al-35% B4C)"           :{'mat_num':4, 'mt':''},
                        "Concrete, Portland"               :{'mat_num':90000,   'mt':''},
                        "void"                             :{'mat_num':0,     'mt':''},
                       }

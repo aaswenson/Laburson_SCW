@@ -1,11 +1,6 @@
 import write_card as wc
 import computed_data as cd
 from string import Template
-header = """\
-{0} This is the MCNP6 model for a Supercritical
-{0} Water Reactor.
-{0}
-""".format(wc.comment_mark)
 class mcnp_card():
     def cell(self,number,data):
         
@@ -33,35 +28,19 @@ def make_pressure_vessel():
 
     pressure_vessel_cell = string.cell(800,
         {'comment'  : 'Pressure Vessel', 
-         'surfs'    : [([-801, 802],[802 -803],[-805,806]) ],
+         'surfs'    : [-801, 802],
          'material' : 'Steel, Stainless 304'
         })
     pressure_vessel_surf = string.surf([
         {'comment'  : 'outer_PV',
-         'type'     : 'CZ',
-         'inputs'   : [cd.PV_outer_radius],
+         'type'     : 'rcc',
+         'inputs'   : [0, 0, cd.PV_bottom_outer, 0, 0, cd.PV_height_outer,
+                       cd.PV_outer_radius ],
          'number'   : 801},
         {'comment'  : 'inner_PV',
-         'type'     : 'CZ',
-         'inputs'   : [cd.PV_inner_radius],
-         'number'   : 802},
-        {'comment'  : 'PV_top_inner',
-         'type'     : 'PZ',
-         'inputs'   : [cd.PV_top_inner],
-         'number'   : 803},
-        {'comment'  : 'PV_top_outer',
-         'type'     : 'PZ',
-         'inputs'   : [cd.PV_top_outer],
-         'number'   : 804},
-        {'comment'  : 'PV_bottom_inner',
-         'type'     : 'PZ',
-         'inputs'   : [cd.PV_bottom_inner],
-         'number'   : 805},
-        {'comment'  : 'PV_bottom_outer',
-         'type'     : 'PZ',
-         'inputs'   : [cd.PV_bottom_outer],
-         'number'   : 806}
-            ])
+         'type'     : 'rcc',
+         'inputs'   : [0, 0, cd.PV_bottom_inner, 0, 0, cd.PV_height_inner, cd.PV_inner_radius],
+         'number'   : 802}])
 
     return [pressure_vessel_cell, pressure_vessel_surf]
 
@@ -70,7 +49,7 @@ def make_structural_data():
     string = mcnp_card()
     
     data_card = string.data('material',cd.material_dict)
-
+    return data_card
 def make_SCW():
 
     # Write cell and surface cards for each level of geometry.
@@ -80,7 +59,6 @@ def make_SCW():
     structural_materials = make_structural_data()
     # Write entire input file.
     input_tmpl = Template("""\
-${header}
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
@@ -92,8 +70,7 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(header = header,
-                                      reactor_level_cells = cell_reactor_lvl,
+    input_str = input_tmpl.substitute(reactor_level_cells = cell_reactor_lvl,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       general_materials = structural_materials,
                                       comm_mk = wc.comment_mark)
