@@ -128,16 +128,19 @@ def apply_MCNP_operator(operator,items,state):
     return lh_p + delimiter[operator].join(items) + rh_p
 
 def write_cell_card(number,data):
-    material_num = md.material_dict[data['material']]['mat_num']
-    density = cd.pyne_mats[data['material']].density
-    surfaces = build_surface_tree(data['surfs'])[0]
-    if data['material'] != 'void':
-        cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number,
-            material_num,-density,surfaces,data['imp']), data['comment'])
-    else:
-        cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, data['imp']), data['comment'])
+    cell_str = ''
+    for cell in data:
+        material_num = md.material_dict[cell['material']]['mat_num']
+        density = cd.pyne_mats[cell['material']].density
+        surfaces = build_surface_tree(cell['surfs'])[0]
+        if cell['material'] != 'void':
+            cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number,
+                material_num,-density,surfaces, cell['imp']), cell['comment'])
+        else:
+            cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, cell['imp']), cell['comment'])
+        cell_str += ' '.join(cell_list)
 
-    return ' '.join(cell_list)
+    return cell_str
     
 
 

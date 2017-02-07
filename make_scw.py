@@ -24,12 +24,12 @@ def make_core_shroud():
 
     string = mcnp_card()
 
-    core_shroud_cell = string.cell(600,
+    core_shroud_cell = string.cell(600,[
         {'comment'  : 'Core_shroud', 
          'surfs'    : [([-601, 602],[-603, 602])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1
-        })
+        }])
     core_shroud_surf = string.surf([
         {'comment'  : 'Upper_shroud',
          'type'     : 'rcc',
@@ -50,34 +50,53 @@ def make_core_level():
     
     string = mcnp_card()
 
-    core_level_cell = string.cell(700,
+    core_level_cell = string.cell(700,[
         {'comment'  : 'Core Level', 
-         'surfs'    : [(-602, [-802, 601, 603])],
+         'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], -602,
+             [-601.1,-802.3, 602.3], [-601.1, 601.3, 603.1, -602.3], [801, -805], [-601.1, 802.3, -801.3])],
          'material' : 'Water, Liquid',
          'imp'      : 1
-        })
+        }])
     return core_level_cell
 
 def make_pressure_vessel():
     
     string = mcnp_card()
 
-    pressure_vessel_cell = string.cell(800,
+    pressure_vessel_cell = string.cell(800,[
         {'comment'  : 'Pressure Vessel', 
-         'surfs'    : [-801, 802],
+         'surfs'    : [([-801.1, 601.1, -801.3, -801.2], [-804, 803, 801.2], [-806, 805, 801.3])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1
-        })
+        }])
     pressure_vessel_surf = string.surf([
-        {'comment'  : 'outer_PV',
+        {'comment'  : 'Outer_PV',
          'type'     : 'rcc',
          'inputs'   : [0, 0, cd.PV_bottom_outer, 0, 0, cd.PV_height_outer,
                        cd.PV_outer_radius ],
          'number'   : 801},
-        {'comment'  : 'inner_PV',
+        {'comment'  : 'Inner_PV',
          'type'     : 'rcc',
          'inputs'   : [0, 0, cd.PV_bottom_inner, 0, 0, cd.PV_height_inner, cd.PV_inner_radius],
-         'number'   : 802}])
+         'number'   : 802},
+        {'comment'  : 'Inner_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_top_outer,cd.PV_inner_radius],
+         'number'   : 803},
+        {'comment'  : 'Outer_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_top_outer,cd.PV_outer_radius],
+         'number'   : 804},
+        {'comment'  : 'Inner_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_bottom_outer,cd.PV_inner_radius],
+         'number'   : 805},
+        {'comment'  : 'Outer_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_bottom_outer,cd.PV_outer_radius],
+         'number'   : 806}
+        ])
+
 
     return [pressure_vessel_cell, pressure_vessel_surf]
 
@@ -85,12 +104,12 @@ def make_outside_world():
 
     string = mcnp_card()
 
-    outside_world_cell = string.cell(900,
+    outside_world_cell = string.cell(900,[
         {'comment'  : 'Pressure Vessel', 
-         'surfs'    : [801],
+         'surfs'    : [801, 804, 806],
          'material' : 'void',
          'imp'      : 0
-        })
+        }])
     return outside_world_cell
 
 def make_structural_data():
@@ -140,10 +159,10 @@ pin_resolution = {'radial_division' : 3,
                   'axial_division'  : 6}
 # Write input file.
 if __name__=="__main__":
-    ifile = open("pynr_{0}by{1}.i".format(pin_resolution['radial_division'],
+    ifile = open("scw_{0}by{1}.i".format(pin_resolution['radial_division'],
                                           pin_resolution['axial_division']), 'w')
     ifile.write(make_SCW())
     ifile.close()
-    print("Input file is successfully generated as 'pynr_{0}by{1}.i'".format(
+    print("Input file is successfully generated as 'scw_{0}by{1}.i'".format(
         pin_resolution['radial_division'],
         pin_resolution['axial_division']))

@@ -8,6 +8,7 @@ PV_height_inner = PV_height
 PV_height_outer = PV_height + 2*PV_thickness
 PV_bottom_inner = -PV_height/2
 PV_bottom_outer = PV_bottom_inner - PV_thickness
+PV_top_outer = PV_bottom_outer + PV_height_outer
 
 # Core Shroud Data
 
