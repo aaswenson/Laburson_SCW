@@ -2,25 +2,72 @@ import write_card as wc
 import computed_data as cd
 from string import Template
 class mcnp_card():
+    """Class to write MCNP cards.
+
+    This class builds cell, surface, and data cards for an MCNP6 model.
+
+    Methods.
+        * cell: writes the cell cards.
+        * surf: writes the surface cards.
+        * data: writes the data cards.
+    """
+
     def cell(self,number,data):
+        """Cell writer.
+        
+        This method writes cell cards for the mcnp model.
+
+        Arguments: number, cell number to define cell.
+                   data, required data to write the cell.
+
+        Returns: string of the cell card
+        """
         
         card = wc.write_cell_card(number,data)
-        
+
         return card
+
     def surf(self,data):
+        """Surface writer.
+
+        This method writes the surface cards for the mcnp model.
+
+        Arguments: data, required data to write the surface.
+
+        Returns: string of the surface card
+        """
 
         card = wc.write_surf_card(data)
 
         return card
 
     def data(self,category,info):
+        """Data writer.
 
+        This method writes the data cards for the mcnp model.
+
+        Arguments: category (string) defines the type of data.
+                   data (dict) required data to write the card.
+        
+        Returns: string of the data card
+        """
 
         card = wc.iterate_data_card(category,info)
 
         return card
 
 def make_core_shroud():
+    """Build the core region shroud.
+
+    This function builds the stainless steel shroud seperating the two core
+    regions.
+
+    Arguments: none
+
+    Returns: core_shroud_cell (string): MCNP cell card defining shroud.
+             core_shroud_surf (string): MCNP surface card to build cells.
+
+    """
 
     string = mcnp_card()
 
@@ -47,20 +94,57 @@ def make_core_shroud():
     return core_shroud_cell, core_shroud_surf
 
 def make_core_level():
+    """Build core level card.
+    
+    This function writes the surface and cell cards for all core level
+    components. Core level components include, core water and the core shroud.
+
+    Arguments: none
+
+    Returns: cell_core_level (template object): template of core level cell card
+             surf_core_level (template object): template of core level surface
+             card.
+    """
     
     string = mcnp_card()
 
-    core_level_cell = string.cell(700,[
+    core_water_cell = string.cell(700,[
         {'comment'  : 'Core Level', 
          'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], -602,
              [-601.1,-802.3, 602.3], [-601.1, 601.3, 603.1, -602.3], [801, -805], [-601.1, 802.3, -801.3])],
          'material' : 'Water, Liquid',
          'imp'      : 1
         }])
-    return core_level_cell
+
+    [core_shroud_cell, core_shroud_surf] = make_core_shroud()
+
+    cell_core_level_temp = Template("""\
+${comm_mk}    Core Shroud                 \n${core_shroud}\
+${comm_mk}    Core water                  \n${core_water}\
+""")
+    
+    cell_core_level = cell_core_level_temp.substitute(core_shroud = core_shroud_cell,
+                                                 core_water  = core_water_cell,
+                                                 comm_mk     = wc.comment_mark)
+
+    surf_core_level_temp = Template("""\
+${comm_mk}    Core Shroud                  \n${core_shroud}\
+""")
+    
+    surf_core_level = surf_core_level_temp.substitute(core_shroud = core_shroud_surf,
+                                                      comm_mk     = wc.comment_mark)
+    return cell_core_level, surf_core_level
 
 def make_pressure_vessel():
-    
+    """Make pressure vessel cards.
+
+    This function makes the cell and surface cards to define the pressure
+    vessel.
+
+    Arguments: none
+
+    Returns: list of the cell and surface card strings
+    """
     string = mcnp_card()
 
     pressure_vessel_cell = string.cell(800,[
@@ -101,6 +185,14 @@ def make_pressure_vessel():
     return [pressure_vessel_cell, pressure_vessel_surf]
 
 def make_outside_world():
+    """Make outside world cards.
+
+    This function defines the world outside the problem space.
+
+    Arguments: (none)
+
+    Returns: string of the outside world cell card.
+    """
 
     string = mcnp_card()
 
@@ -110,9 +202,18 @@ def make_outside_world():
          'material' : 'void',
          'imp'      : 0
         }])
+
     return outside_world_cell
 
 def make_structural_data():
+    """Make structural data cards.
+
+    This function makes the data cards for the reactor structural material
+    
+    Arguments: none
+
+    Returns: string of the structural material data card.
+    """
     string = mcnp_card()
     
     data_card = string.data('material',cd.material_dict)
@@ -120,10 +221,15 @@ def make_structural_data():
     return data_card
 
 def make_SCW():
+    """Main level function to write the MCNP input file.
+
+    Arguments: none
+
+    Returns: full MCNP input file string.
+    """
 
     # Write cell and surface cards for each level of geometry.
-    [cell_core_shroud, surf_core_shroud] = make_core_shroud()
-    cell_core_lvl                        = make_core_level()
+    [cell_core_level, surf_core_level]   = make_core_level()
     [cell_reactor_lvl, surf_reactor_lvl] = make_pressure_vessel()
     cell_outside_wrld                    = make_outside_world()
     # Write general data cards.
@@ -131,12 +237,11 @@ def make_SCW():
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
-${comm_mk}  Core shroud          \n${core_shroud_cells}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
-${comm_mk}  Core shroud          \n${core_shroud_surfs}${comm_mk}
+${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  MATERIAL
@@ -145,9 +250,8 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(core_shroud_cells   = cell_core_shroud,
-                                      core_shroud_surfs   = surf_core_shroud,
-                                      core_level_cells    = cell_core_lvl,
+    input_str = input_tmpl.substitute(core_level_cells    = cell_core_level,
+                                      core_level_surfs    = surf_core_level,
                                       reactor_level_cells = cell_reactor_lvl,
                                       outside_world_cells = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
