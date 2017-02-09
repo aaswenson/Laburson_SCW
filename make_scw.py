@@ -1,5 +1,6 @@
 import write_card as wc
 import computed_data as cd
+import fuel_comp_library as fcl
 from string import Template
 class mcnp_card():
     """Class to write MCNP cards.
@@ -56,6 +57,27 @@ class mcnp_card():
 
         return card
 
+def make_active_core():
+    """Define the cards to build the active core regions.
+    """
+    string = mcnp_card()
+
+    active_core_cell = string.cell(500, [
+        {'comment' : 'Active Core Region',
+         'surfs'   : [-602, -501],
+         'material': 100000,
+         'imp'     : 1
+        }])
+
+    active_core_surf = string.surf([
+        {'comment' : 'Upper Active Core',
+         'type'    : 'PZ',
+         'inputs'  : [cd.Active_core_top],
+         'number'  : 501
+        }])
+
+    return active_core_cell, active_core_surf
+
 def make_core_shroud():
     """Build the core region shroud.
 
@@ -110,28 +132,32 @@ def make_core_level():
 
     core_water_cell = string.cell(700,[
         {'comment'  : 'Core Level', 
-         'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], -602,
-             [-601.1,-802.3, 602.3], [-601.1, 601.3, 603.1, -602.3], [801, -805], [-601.1, 802.3, -801.3])],
+         'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], [-601.1,-802.3,
+             602.3], [-601.1, 601.3, 603.1, -602.3], [801, -805], [-601.1, 802.3, -801.3], [-602, 501])],
          'material' : 'Water, Liquid',
          'imp'      : 1
         }])
 
     [core_shroud_cell, core_shroud_surf] = make_core_shroud()
-
+    [active_core_cell, active_core_surf] = make_active_core()
     cell_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                 \n${core_shroud}\
-${comm_mk}    Core water                  \n${core_water}\
+${comm_mk}    Core Water                  \n${core_water}\
+${comm_mk}    Active Core                 \n${active_core}\
 """)
     
     cell_core_level = cell_core_level_temp.substitute(core_shroud = core_shroud_cell,
                                                  core_water  = core_water_cell,
+                                                 active_core = active_core_cell,
                                                  comm_mk     = wc.comment_mark)
 
     surf_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                  \n${core_shroud}\
+${comm_mk}                                 \n${active_core}\
 """)
     
     surf_core_level = surf_core_level_temp.substitute(core_shroud = core_shroud_surf,
+                                                      active_core = active_core_surf,
                                                       comm_mk     = wc.comment_mark)
     return cell_core_level, surf_core_level
 
@@ -220,6 +246,34 @@ def make_structural_data():
 
     return data_card
 
+def make_fuel_data():
+    
+    string = mcnp_card()
+
+    data_card = string.data('fuel',fcl.write_fuel_library())
+
+    return data_card
+
+def write_material_card():
+    """
+    """
+    
+    string = mcnp_card()
+
+    structural_data = make_structural_data()
+    fuel_data       = make_fuel_data()
+    
+    material_card_temp = Template("""\
+${comm_mk}    Material Data                 \n${structural_materials}${comm_mk}
+${comm_mk}    Fuel Material Data            \n${fuel_materials}${comm_mk}
+""")
+    material_card = material_card_temp.substitute(structural_materials = structural_data,
+                                                  fuel_materials       = fuel_data,
+                                                  comm_mk              = wc.comment_mark)
+    return material_card
+
+
+
 def make_SCW():
     """Main level function to write the MCNP input file.
 
@@ -233,7 +287,7 @@ def make_SCW():
     [cell_reactor_lvl, surf_reactor_lvl] = make_pressure_vessel()
     cell_outside_wrld                    = make_outside_world()
     # Write general data cards.
-    structural_materials = make_structural_data()
+    materials_card = write_material_card()
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
@@ -245,18 +299,18 @@ ${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  MATERIAL
-${comm_mk}    General materials  \n${general_materials}${comm_mk}
+${comm_mk}    General materials  \n${material_card}${comm_mk}
 ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(core_level_cells    = cell_core_level,
-                                      core_level_surfs    = surf_core_level,
-                                      reactor_level_cells = cell_reactor_lvl,
-                                      outside_world_cells = cell_outside_wrld,
+    input_str = input_tmpl.substitute(core_level_cells       = cell_core_level,
+                                      core_level_surfs       = surf_core_level,
+                                      reactor_level_cells    = cell_reactor_lvl,
+                                      outside_world_cells    = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
-                                      general_materials = structural_materials,
-                                      comm_mk = wc.comment_mark)
+                                      material_card          = materials_card,
+                                      comm_mk                = wc.comment_mark)
 
     return input_str
 pin_resolution = {'radial_division' : 3,

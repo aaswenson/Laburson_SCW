@@ -130,8 +130,12 @@ def apply_MCNP_operator(operator,items,state):
 def write_cell_card(number,data):
     cell_str = ''
     for cell in data:
-        material_num = md.material_dict[cell['material']]['mat_num']
-        density = cd.pyne_mats[cell['material']].density
+        if type(cell['material']) == int:
+            material_num = cell['material']
+            density = 2
+        else:
+            material_num = md.material_dict[cell['material']]['mat_num']
+            density = cd.pyne_mats[cell['material']].density
         surfaces = build_surface_tree(cell['surfs'])[0]
         if cell['material'] != 'void':
             cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number,
@@ -160,7 +164,16 @@ def iterate_data_card(category,data):
         for material in data:
             if material != 'void':
                 data_card += write_material_card(material)
+    elif category == 'fuel':
+        for fuel_mat in data:
+            data_card += write_fuel_mat_card(data[fuel_mat])
     return data_card
+
+def write_fuel_mat_card(fuel_mat):
+    
+    fuel_material = fuel_mat.mcnp()
+    
+    return fuel_material
 
 def write_material_card(material_name):
     data = md.material_dict[material_name]

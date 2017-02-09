@@ -17,6 +17,8 @@ Upper_shroud_bottom  = Core_bottom_position + Core_height + Flow_offset
 Upper_shroud_top     = Upper_shroud_bottom + Core_shroud_th
 shroud_extent_z      = Upper_shroud_top + -Core_bottom_position
 
+# Active Core Data
+Active_core_top      = Core_bottom_position + Core_height
 
 # Load Material Library
 pyne_mats = md.load_pyne_matlib()
