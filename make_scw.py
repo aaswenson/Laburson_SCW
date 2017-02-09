@@ -63,7 +63,7 @@ def make_active_core():
     string = mcnp_card()
 
     active_core_cell = string.cell(500, [
-        {'comment' : 'Active Core Region',
+        {'comment' : 'Active Fissile Core',
          'surfs'   : [-602, -501],
          'material': 100000,
          'imp'     : 1
@@ -272,7 +272,21 @@ ${comm_mk}    Fuel Material Data            \n${fuel_materials}${comm_mk}
                                                   comm_mk              = wc.comment_mark)
     return material_card
 
+def write_data_card():
+    """Write the non-material data card.
+    """
+    mode = ''.join(wc.write_general_data({
+                'category' : 'mode',
+                'particle' : 'n',
+                'comment'  : 'Problem Type'}))
 
+    kcode = ''.join(wc.write_general_data({
+                'category' : 'kcode',
+                'kcode'    : '5000 1 15 25',
+                'ksrc'     : '0 0 0',
+                'comment'  : 'criticality card'}))
+
+    return mode, kcode
 
 def make_SCW():
     """Main level function to write the MCNP input file.
@@ -288,6 +302,7 @@ def make_SCW():
     cell_outside_wrld                    = make_outside_world()
     # Write general data cards.
     materials_card = write_material_card()
+    [mode, kcode]  = write_data_card()
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
@@ -300,6 +315,9 @@ ${comm_mk}  Reactor level        \n${reactor_level_surfaces}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  MATERIAL
 ${comm_mk}    General materials  \n${material_card}${comm_mk}
+${comm_mk}  DATA
+${comm_mk}    kcode              \n${kcode}
+${comm_mk}                       \n${mode}
 ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
@@ -310,6 +328,8 @@ ${comm_mk}  ------------------------------  End of file  -----------------------
                                       outside_world_cells    = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       material_card          = materials_card,
+                                      kcode                  = kcode,
+                                      mode                   = mode,
                                       comm_mk                = wc.comment_mark)
 
     return input_str

@@ -132,7 +132,7 @@ def write_cell_card(number,data):
     for cell in data:
         if type(cell['material']) == int:
             material_num = cell['material']
-            density = 2
+            density = 5
         else:
             material_num = md.material_dict[cell['material']]['mat_num']
             density = cd.pyne_mats[cell['material']].density
@@ -179,6 +179,7 @@ def write_material_card(material_name):
     data = md.material_dict[material_name]
     pyne_mat = cd.pyne_mats[material_name]
     pyne_mat.metadata['comment'] = material_name
+    del pyne_mat['8018']
     pyne_mat.metadata['mat_number'] = data['mat_num']
 #   pyne_mat.metadata['table_ids'] = XS_library
     data_list = [str(pyne_mat.mcnp())]
@@ -187,7 +188,15 @@ def write_material_card(material_name):
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
     return ' '.join(data_list)
 
-
+def write_general_data(data):
+    
+    if data['category'] == 'mode':
+        data_str = data['category'] + ' ' + data['particle'] + '\nprint'
+    elif data['category'] == 'kcode':
+        data_str = "{0} {1} \n{2} {3}".format('kcode',data['kcode'],'ksrc',data['ksrc'])
+    else:
+        pass
+    return data_str
 
 
 
