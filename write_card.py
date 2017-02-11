@@ -169,11 +169,6 @@ def iterate_data_card(category,data):
             data_card += write_fuel_mat_card(data[fuel_mat])
     return data_card
 
-def write_fuel_mat_card(fuel_mat):
-    
-    fuel_material = fuel_mat.mcnp()
-    
-    return fuel_material
 
 def write_material_card(material_name):
     data = md.material_dict[material_name]
@@ -187,6 +182,15 @@ def write_material_card(material_name):
         mt_str = "mt{0:<8} {1}".format(pyne_mat.metadata['mat_number'],data['mt'])
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
     return ' '.join(data_list)
+
+def write_fuel_data(pyne_mat,material_num):
+    pyne_mat = pyne_mat.expand_elements()
+    del pyne_mat['8018']
+    pyne_mat.metadata['mat_number'] = material_num
+#   pyne_mat.metadata['table_ids'] = XS_library
+    data_list = [str(pyne_mat.mcnp())]
+    return ' '.join(data_list)
+
 
 def write_general_data(data):
     

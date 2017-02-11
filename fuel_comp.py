@@ -32,7 +32,6 @@ def iterate_fuel_manifest():
 
     return fuel_data
 
-fuel_data = iterate_fuel_manifest()
 
 def make_fuel_composition_pyne(fuel_data):
     pyne_fuels = {}
@@ -60,7 +59,7 @@ def make_fuel_composition_pyne(fuel_data):
         mfrac_Pu239 = mfrac_fuel*data['mfrac_Pu']*data['enrich_Pu']
         mfrac_Pu240 = mfrac_fuel*data['mfrac_Pu']*(1.0-data['enrich_Pu'])
     
-        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np':data['mfrac_Np'],'Am':data['mfrac_Am']}
+        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np'],'Am241':data['mfrac_Am']}
 
         fuel_pyne_mat = Material(fuel_composition)
         fuel_pyne_mat = fuel_pyne_mat*0.333 + Material({'O':1},0.667)
@@ -74,5 +73,4 @@ def make_fuel_composition_pyne(fuel_data):
         pyne_fuels[data['type']] = homogeneous_fuel
     return pyne_fuels
 
-pyne_fuels = make_fuel_composition_pyne(fuel_data)
 
