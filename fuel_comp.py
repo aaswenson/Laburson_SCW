@@ -50,7 +50,7 @@ def make_fuel_composition_pyne(fuel_data):
         frac_mod  = A_mod/A_cell
 
         m_fuel = cd.rho_UO2*frac_fuel
-        m_clad = 0 #cd.rho_SS*frac_clad
+        m_clad = cd.rho_SS*frac_clad
         m_mod  = cd.rho_H2O*frac_mod
         
         m      = m_fuel + m_clad + m_mod
@@ -59,28 +59,23 @@ def make_fuel_composition_pyne(fuel_data):
         mfrac_clad = m_clad/m
         mfrac_mod  = m_mod/m
 
-        print mfrac_fuel
-        print mfrac_mod
-        print mfrac_clad
 
-        mfrac_U = mfrac_fuel*(1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])
+        mfrac_U = mfrac_fuel*(1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*0.333
         mfrac_U235 = mfrac_U*data['enrich_U']
         mfrac_U238 = mfrac_U*(1 - data['enrich_U'])
-        mfrac_Pu239 = mfrac_fuel*data['mfrac_Pu']*data['enrich_Pu']
-        mfrac_Pu240 = mfrac_fuel*data['mfrac_Pu']*(1.0-data['enrich_Pu'])
-    
-        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np'],'Am241':data['mfrac_Am']}
+        mfrac_Pu239 = mfrac_fuel*data['mfrac_Pu']*data['enrich_Pu']*0.333
+        mfrac_Pu240 = mfrac_fuel*data['mfrac_Pu']*(1.0-data['enrich_Pu'])*0.333
+        mfrac_O     = mfrac_fuel*0.667 + mfrac_mod*0.333
+        mfrac_H     = mfrac_mod*0.667
 
-        fuel_pyne_mat = Material(fuel_composition)
-        fuel_pyne_mat = fuel_pyne_mat*0.333 + Material({'O':1},0.667)
-
-        non_fuel_pyne_mat = Material({'H':0.667,'O':0.333},mfrac_mod)
-        ss_pyne_mat       = cd.pyne_mats['Steel, Stainless 304']
-
-        print non_fuel_pyne_mat 
-        homogeneous_fuel = fuel_pyne_mat + non_fuel_pyne_mat + ss_pyne_mat
+        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np']*0.333,'Am241':data['mfrac_Am']*0.333,'O':mfrac_O,'H':mfrac_H}
+        fuel_mat = Material(fuel_composition)
         
-        pyne_fuels[data['type']] = homogeneous_fuel
+        clad_mat = cd.pyne_mats['Steel, Stainless 304']
+        
+        homog_fuel = clad_mat*mfrac_clad + fuel_mat
+        pyne_fuels[data['type']] = homog_fuel
+
     return pyne_fuels
 
 

@@ -302,7 +302,7 @@ def write_data_card():
     kcode = ''.join(wc.write_general_data({
                 'category' : 'kcode',
                 'kcode'    : '5000 1 15 25',
-                'ksrc'     : '0 0 0',
+                'ksrc'     : '0 0 0\n     0 -250 0',
                 'comment'  : 'criticality card'}))
 
     return mode, kcode
