@@ -43,16 +43,26 @@ def make_fuel_composition_pyne(fuel_data):
         A_pin   = 3.1415*(D_pin*D_pin)/4
         A_fuel  = 3.1415*(D_fuel*D_fuel)/4
         A_clad  = A_pin - A_fuel
-        A_mod   = A_cell
+        A_mod   = A_cell - A_pin
 
         frac_fuel = A_fuel/A_cell
         frac_clad = A_clad/A_cell
         frac_mod  = A_mod/A_cell
 
-        mfrac_fuel = cd.rho_UO2*frac_fuel
-        mfrac_clad = cd.rho_SS*frac_clad
-        mfrac_mod  = cd.rho_H2O*frac_mod
+        m_fuel = cd.rho_UO2*frac_fuel
+        m_clad = 0 #cd.rho_SS*frac_clad
+        m_mod  = cd.rho_H2O*frac_mod
         
+        m      = m_fuel + m_clad + m_mod
+
+        mfrac_fuel = m_fuel/m
+        mfrac_clad = m_clad/m
+        mfrac_mod  = m_mod/m
+
+        print mfrac_fuel
+        print mfrac_mod
+        print mfrac_clad
+
         mfrac_U = mfrac_fuel*(1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])
         mfrac_U235 = mfrac_U*data['enrich_U']
         mfrac_U238 = mfrac_U*(1 - data['enrich_U'])
@@ -64,10 +74,10 @@ def make_fuel_composition_pyne(fuel_data):
         fuel_pyne_mat = Material(fuel_composition)
         fuel_pyne_mat = fuel_pyne_mat*0.333 + Material({'O':1},0.667)
 
-        non_fuel_pyne_mat = Material({'H2O':mfrac_mod})
+        non_fuel_pyne_mat = Material({'H':0.667,'O':0.333},mfrac_mod)
         ss_pyne_mat       = cd.pyne_mats['Steel, Stainless 304']
 
-        
+        print non_fuel_pyne_mat 
         homogeneous_fuel = fuel_pyne_mat + non_fuel_pyne_mat + ss_pyne_mat
         
         pyne_fuels[data['type']] = homogeneous_fuel
