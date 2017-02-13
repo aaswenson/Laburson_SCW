@@ -20,5 +20,11 @@ shroud_extent_z      = Upper_shroud_top + -Core_bottom_position
 # Active Core Data
 Active_core_top      = Core_bottom_position + Core_height
 
+# Shielding Data
+inner_concrete_radius = PV_outer_radius
+outer_concrete_radius = PV_outer_radius + shielding_thick
+shield_upper_height   = PV_top_outer + containment_water_level
+shield_lower_height   = PV_bottom_outer - shielding_thick
+
 # Load Material Library
 pyne_mats = md.load_pyne_matlib()

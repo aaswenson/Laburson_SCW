@@ -129,21 +129,22 @@ def apply_MCNP_operator(operator,items,state):
 
 def write_cell_card(number,data):
     cell_str = ''
+    i = 0
     for cell in data:
         if type(cell['material']) == int:
-            material_num = cell['material']
+            material_num = cell['material'] 
             density = 5
         else:
             material_num = md.material_dict[cell['material']]['mat_num']
             density = cd.pyne_mats[cell['material']].density
         surfaces = build_surface_tree(cell['surfs'])[0]
         if cell['material'] != 'void':
-            cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number,
+            cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number+i,
                 material_num,-density,surfaces, cell['imp']), cell['comment'])
         else:
             cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, cell['imp']), cell['comment'])
         cell_str += ' '.join(cell_list)
-
+        i += 1
     return cell_str
     
 

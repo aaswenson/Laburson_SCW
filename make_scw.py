@@ -237,6 +237,50 @@ def make_pressure_vessel():
 
     return [pressure_vessel_cell, pressure_vessel_surf]
 
+def make_shielding():
+    """Make concrete shielding cards
+
+    This function defines the cards to make concrete reactor shielding.
+
+    Arguments: none
+
+    Returns: sring of the outside world cell, surf card.
+    """
+
+    string = mcnp_card()
+    
+    shielding_cell = string.cell(900,[
+        {'comment'  : 'Concrete Shielding',
+         'surfs'    : [-900, 901, -902, 903],
+         'material' : 'Concrete, Portland',
+         'imp'      : 1},
+        {'comment'  : 'Water Shielding',
+         'surfs'    : [([-901, -902, 804, 801.2],[903, -901, 806, 801.3])],
+         'material' : 'Water, Liquid',
+         'imp'      : 1}
+         ])
+
+    shielding_surfs = string.surf([
+        {'comment'  : 'Outer_shield_cyl',
+         'type'     : 'CZ',
+         'inputs'   : [cd.outer_concrete_radius],
+         'number'   :  900},
+        {'comment'  : 'Inner_shield_cyl',
+         'type'     : 'CZ',
+         'inputs'   : [cd.inner_concrete_radius],
+         'number'   :  901},
+        {'comment'  : 'Upper_shield_plane',
+         'type'     : 'PZ',
+         'inputs'   : [cd.shield_upper_height],
+         'number'   :  902},
+        {'comment'  : 'Lower_shield_plane',
+         'type'     : 'PZ',
+         'inputs'   : [cd.shield_lower_height],
+         'number'   :  903}
+        ])
+
+    return [shielding_cell, shielding_surfs]
+    
 def make_outside_world():
     """Make outside world cards.
 
@@ -249,9 +293,9 @@ def make_outside_world():
 
     string = mcnp_card()
 
-    outside_world_cell = string.cell(900,[
-        {'comment'  : 'Pressure Vessel', 
-         'surfs'    : [801, 804, 806],
+    outside_world_cell = string.cell(990,[
+        {'comment'  : 'Outside World', 
+         'surfs'    : [(-903, 902,[900, 903, -902])],
          'material' : 'void',
          'imp'      : 0
         }])
@@ -318,6 +362,7 @@ def make_SCW():
     # Write cell and surface cards for each level of geometry.
     [cell_core_lvl, surf_core_lvl]                        = make_core_level()
     [cell_reactor_lvl, surf_reactor_lvl]                  = make_pressure_vessel()
+    [cell_shielding, surf_shielding]                      = make_shielding()
     cell_outside_wrld                                     = make_outside_world()
     # Write general data cards.
     materials_card = write_material_card()
@@ -327,10 +372,12 @@ def make_SCW():
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
+${comm_mk}  Shielding            \n${shielding_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
 ${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
-${comm_mk}  Reactor level        \n${reactor_level_surfaces}
+${comm_mk}  Reactor level        \n${reactor_level_surfaces}${comm_mk}
+${comm_mk}  Shielding level      \n${shielding_surfs} 
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  MATERIAL             \n${material_card}${comm_mk}
 ${comm_mk}  DATA
@@ -343,6 +390,8 @@ ${comm_mk}  ------------------------------  End of file  -----------------------
     input_str = input_tmpl.substitute(core_level_cells       = cell_core_lvl,
                                       core_level_surfs       = surf_core_lvl,
                                       reactor_level_cells    = cell_reactor_lvl,
+                                      shielding_cells        = cell_shielding,
+                                      shielding_surfs        = surf_shielding,
                                       outside_world_cells    = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       material_card          = materials_card,
@@ -351,14 +400,12 @@ ${comm_mk}  ------------------------------  End of file  -----------------------
                                       comm_mk                = wc.comment_mark)
 
     return input_str
-pin_resolution = {'radial_division' : 3,
-                  'axial_division'  : 6}
+pin_resolution = {'radial_division' : 1,
+                  'axial_division'  : 1}
+model_info = '2_region_homog'
 # Write input file.
 if __name__=="__main__":
-    ifile = open("scw_{0}by{1}.i".format(pin_resolution['radial_division'],
-                                          pin_resolution['axial_division']), 'w')
+    ifile = open("scwr_{0}.i".format(model_info), 'w')
     ifile.write(make_SCW())
     ifile.close()
-    print("Input file is successfully generated as 'scw_{0}by{1}.i'".format(
-        pin_resolution['radial_division'],
-        pin_resolution['axial_division']))
+    print("Input file is successfully generated as 'scw_{0}.i'".format(model_info))

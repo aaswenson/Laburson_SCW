@@ -14,8 +14,13 @@ c  Reactor level
 800 80000 -8.0 ((-801.1 601.1 -801.3 -801.2):(-804 803          $Pressure Vessel
           801.2):(-806 805 801.3)) imp:n=1                       $Pressure Vessel
 c
+c  Shielding            
+900 90000 -2.3 -900 901 -902 903 imp:n=1                     $Concrete Shielding
+901 1 -0.998207 ((-901 -902 804 801.2):(903 -901 806 801.3))    $Water Shielding
+          imp:n=1                                                $Water Shielding
+c
 c  Outside World level  
-900 0 801 804 806 imp:n=0                                       $Pressure Vessel
+990 0 (-903:902:(900 903 -902)) imp:n=0                           $Outside World
 
 c  -----------------------------  SURFACE CARD  -----------------------------  c
 c  Core level           
@@ -33,7 +38,13 @@ c  Reactor level
 804 S 0 0 350 250                                             $Outer_dome_sphere
 805 S 0 0 -350 200                                            $Inner_dome_sphere
 806 S 0 0 -350 250                                            $Outer_dome_sphere
-
+c
+c  Shielding level      
+900 CZ 550                                                     $Outer_shield_cyl
+901 CZ 250                                                     $Inner_shield_cyl
+902 PZ 1350                                                  $Upper_shield_plane
+903 PZ -650                                                  $Lower_shield_plane
+ 
 c  -------------------------------  DATA CARD  ------------------------------  c
 c  MATERIAL             
 c    Material Data                 
@@ -193,11 +204,9 @@ c
 c
 c  DATA
 c    kcode              
-c kcode 500000 1 15 25 
-c ksrc 0 0 0
-c     0 -250 0
-SDEF ERG=1
-nps 50000
+kcode 5000 1 15 25 
+ksrc 0 0 0
+     0 -250 0
 c                       
 mode n
 print
