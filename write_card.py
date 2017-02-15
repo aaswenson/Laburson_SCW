@@ -136,6 +136,11 @@ def write_cell_card(number,data):
             density = 5
         else:
             material_num = md.material_dict[cell['material']]['mat_num']
+
+        # check for provided density for fuels
+        if 'density' in cell.keys():
+            density = float(cell['density'])
+        else:
             density = cd.pyne_mats[cell['material']].density
         surfaces = build_surface_tree(cell['surfs'])[0]
         if cell['material'] != 'void':

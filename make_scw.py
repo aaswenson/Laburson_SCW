@@ -83,7 +83,9 @@ def iterate_fuel_regions():
               {'comment'  : 'Active Fuel',
                'surfs'    : [surfs],
                'material' : fuel_mat_num,
-               'imp'      : 1}])
+               'imp'      : 1,
+               'density'  : data[2]
+               }])
     cell_str = ''.join(cell_list)
     data_str = ''.join(data_list)
 
@@ -100,7 +102,8 @@ def make_active_core():
         {'comment' : 'Upper Active Core',
          'type'    : 'PZ',
          'inputs'  : [cd.Active_core_top],
-         'number'  : 501
+         'number'  : 501,
+         'imp'     : 1
         }])
 
     return active_core_cell, active_core_surf, active_core_data
@@ -162,7 +165,7 @@ def make_core_level():
          'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], [-601.1,-802.3,
              602.3], [801, -805], [-601.1, 802.3, -801.3], [-602, 501],[-802.1, 601.3, 603.1, -602.3, 501])],
          'material' : 'Water, Liquid',
-         'imp'      : 1
+         'imp'      : 1,
         }])
 
     [core_shroud_cell, core_shroud_surf] = make_core_shroud()
@@ -257,8 +260,8 @@ def make_shielding():
         {'comment'  : 'Water Shielding',
          'surfs'    : [([-901, -902, 804, 801.2],[903, -901, 806, 801.3])],
          'material' : 'Water, Liquid',
-         'imp'      : 1}
-         ])
+         'imp'      : 1
+         }])
 
     shielding_surfs = string.surf([
         {'comment'  : 'Outer_shield_cyl',
