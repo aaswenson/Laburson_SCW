@@ -60,22 +60,27 @@ def make_fuel_composition_pyne(fuel_data):
         mfrac_mod  = m_mod/m
 
 
-        mfrac_U = mfrac_fuel*(1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*0.333
-        mfrac_U235 = mfrac_U*data['enrich_U']
-        mfrac_U238 = mfrac_U*(1 - data['enrich_U'])
-        mfrac_Pu239 = mfrac_fuel*data['mfrac_Pu']*data['enrich_Pu']*0.333
-        mfrac_Pu240 = mfrac_fuel*data['mfrac_Pu']*(1.0-data['enrich_Pu'])*0.333
-        mfrac_O     = mfrac_fuel*0.667 + mfrac_mod*0.333
-        mfrac_H     = mfrac_mod*0.667
+        mfrac_U     = (1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*(1 - cd.mfrac_OinUO2)
+        mfrac_U235  = mfrac_U*data['enrich_U']
+        mfrac_U238  = mfrac_U*(1 - data['enrich_U'])
+        mfrac_Pu239 = data['mfrac_Pu']*data['enrich_Pu']*(1 - cd.mfrac_OinPuO2)
+        mfrac_Pu240 = data['mfrac_Pu']*(1.0-data['enrich_Pu'])*(1 - cd.mfrac_OinPuO2)
+        mfrac_Np    = data['mfrac_Np']*(1 - cd.mfrac_OinNpO2)
+        mfrac_Am    = data['mfrac_Am']*(1 - cd.mfrac_OinAmO2)
+        mfrac_O     = mfrac_U*cd.mfrac_OinUO2 + data['mfrac_Pu']*cd.mfrac_OinPuO2 + data['mfrac_Np']*cd.mfrac_OinNpO2 + data['mfrac_Am']*cd.mfrac_OinAmO2
 
-        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np']*0.333,'Am241':data['mfrac_Am']*0.333,'O':mfrac_O,'H':mfrac_H}
+        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np'],'Am241':data['mfrac_Am'],'O':mfrac_O}
         fuel_mat = Material(fuel_composition)
+
+
+        
         
         clad_mat = cd.pyne_mats['Steel, Stainless 304']
-        
-        homog_fuel = clad_mat*mfrac_clad + fuel_mat
+        mod_mat = cd.pyne_mats['Water, Liquid']
+
+        homog_fuel = clad_mat*mfrac_clad + fuel_mat*mfrac_fuel + mod_mat*mfrac_mod
+
         pyne_fuels[data['type']] = homog_fuel
 
     return pyne_fuels
-
 

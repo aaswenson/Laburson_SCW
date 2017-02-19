@@ -28,3 +28,8 @@ shield_lower_height   = PV_bottom_outer - shielding_thick
 
 # Load Material Library
 pyne_mats = md.load_pyne_matlib()
+
+mfrac_OinUO2 = 0.11856
+mfrac_OinPuO2 = 0.11769
+mfrac_OinAmO2 = 0.11636
+mfrac_OinNpO2 = 0.11896
