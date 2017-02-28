@@ -4,8 +4,8 @@ PV_thickness    = 50
 PV_height       = 600
 
 Core_height     = 300
-TC_radius       = 100  # Thermal core region radius
-FC_radius       = 175  # Fast core region radius
+TC_radius       = 150  # Thermal core region radius
+FC_radius       = 225  # Fast core region radius
 Core_shroud_th  = 1    # Thickness of the core shroud
 
 # shielding dimensions
