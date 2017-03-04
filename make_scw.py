@@ -74,9 +74,9 @@ def iterate_fuel_regions():
         data = fuel_region.split(',')
         fuel_mat_num = int(data[1])
         if fuel_mat_num/10000000 < 5:
-            surfs = [-602, -501]
+            surfs = [-501, -601, 605]
         else:
-            surfs = [-802.1, 601.3, 603.1, -602.3, -501]
+            surfs = [-606, 605, 604, -501]
         fuel_mat = pyne_fuels[data[0]]
         data_list += wc.write_fuel_data(fuel_mat, fuel_mat_num)
         cell_list += string.cell(fuel_mat_num, [
@@ -125,25 +125,55 @@ def make_core_shroud():
 
     core_shroud_cell = string.cell(600,[
         {'comment'  : 'Core_shroud', 
-         'surfs'    : [([-601, 602],[-603, 602])],
+         'surfs'    : [([-802, -602, 603, 604],[601, -604, -602, 605])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1
         }])
     core_shroud_surf = string.surf([
-        {'comment'  : 'Upper_shroud',
-         'type'     : 'rcc',
-         'inputs'   : [0, 0, cd.Upper_shroud_bottom, 0, 0, cd.Core_shroud_th, cd.PV_inner_radius],
-         'number'   : 601},
         {'comment'  : 'TC_shroud_inner',
-         'type'     : 'rcc',
-         'inputs'   : [0, 0, cd.Core_bottom_position, 0, 0, cd.shroud_extent_z, cd.TC_radius],
+         'type'     : 'CZ',
+         'inputs'   : [cd.TC_radius],
+         'number'   : 601},
+        {'comment'  : 'Shroud_upper_extent_top',
+         'type'     : 'PZ',
+         'inputs'   : [cd.Upper_shroud_top],
          'number'   : 602},
+        {'comment'  : 'Shroud_upper_extent_bottom',
+         'type'     : 'PZ',
+         'inputs'   : [cd.Upper_shroud_bottom],
+         'number'   : 603},
         {'comment'  : 'TC_shroud_outer',
-         'type'     : 'rcc',
-         'inputs'   : [0, 0, cd.Core_bottom_position, 0, 0, cd.shroud_extent_z, cd.Thermal_shroud_outer],
-         'number'   : 603}])
+         'type'     : 'CZ',
+         'inputs'   : [cd.Thermal_shroud_outer],
+         'number'   : 604},
+        {'comment'  : 'Shroud_bottom',
+         'type'     : 'PZ',
+         'inputs'   : [cd.Core_bottom_position],
+         'number'   : 605}
+        ])
     
     return core_shroud_cell, core_shroud_surf
+
+def make_reflector():
+    """Build graphite reflector region cards.
+    """
+
+    string = mcnp_card()
+
+    reflector_cell = string.cell(650, [
+        {'comment'  : 'reflector',
+         'surfs'    : [-802, 606, -501, 605],
+         'material' : 'Carbon, Graphite (reactor grade)',
+         'imp'      : 1}
+        ])
+    reflector_surfs = string.surf([
+        {'comment' : 'Graphite reflector',
+         'type'    : 'CZ',
+         'inputs'  : [cd.FC_radius],
+         'number'  : 606}
+        ])
+    
+    return reflector_cell, reflector_surfs
 
 def make_core_level():
     """Build core level card.
@@ -162,32 +192,36 @@ def make_core_level():
 
     core_water_cell = string.cell(700,[
         {'comment'  : 'Core Level', 
-         'surfs'    : [([-803, 801], [-801.2, 601.2, -601.1], [-601.1,-802.3,
-             602.3], [801, -805], [-601.1, 802.3, -801.3], [-602, 501],[-802.1, 601.3, 603.1, -602.3, 501])],
+         'surfs'    : [([-802, 602,-803],[803, -805], [-602, 501, -601], [-603, 501, -802,604],[-605, -802, 804], [-804, -802, -807])],
          'material' : 'Water, Liquid',
-         'imp'      : 1,
+         'imp'      : 1
         }])
 
     [core_shroud_cell, core_shroud_surf] = make_core_shroud()
     [active_core_cell, active_core_surf, active_core_data] = make_active_core()
+    [reflector_cell, reflector_surf] = make_reflector()
     cell_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                 \n${core_shroud}\
 ${comm_mk}    Core Water                  \n${core_water}\
 ${comm_mk}    Active Core                 \n${active_core}\
+${comm_mk}    Reflector Region            \n${reflector}\
 """)
     
     cell_core_level = cell_core_level_temp.substitute(core_shroud = core_shroud_cell,
                                                  core_water  = core_water_cell,
                                                  active_core = active_core_cell,
+                                                 reflector   = reflector_cell,
                                                  comm_mk     = wc.comment_mark)
 
     surf_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                  \n${core_shroud}\
 ${comm_mk}                                 \n${active_core}\
+${comm_mk}                                 \n${reflector}\
 """)
     surf_core_level = surf_core_level_temp.substitute(core_shroud = core_shroud_surf,
-                                                     active_core = active_core_surf,
-                                                     comm_mk     = wc.comment_mark)
+                                                      active_core = active_core_surf,
+                                                      reflector   = reflector_surf,
+                                                      comm_mk     = wc.comment_mark)
     
     return cell_core_level, surf_core_level
 
@@ -205,36 +239,43 @@ def make_pressure_vessel():
 
     pressure_vessel_cell = string.cell(800,[
         {'comment'  : 'Pressure Vessel', 
-         'surfs'    : [([-801.1, 601.1, -801.3, -801.2], [-804, 803, 801.2], [-806, 805, 801.3])],
+            'surfs'    : [([-801, 802, -803, 804], [-806, 805, 803], [-808, 807, -804])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1
         }])
     pressure_vessel_surf = string.surf([
         {'comment'  : 'Outer_PV',
-         'type'     : 'rcc',
-         'inputs'   : [0, 0, cd.PV_bottom_outer, 0, 0, cd.PV_height_outer,
-                       cd.PV_outer_radius ],
+         'type'     : 'CZ',
+         'inputs'   : [cd.PV_outer_radius],
          'number'   : 801},
         {'comment'  : 'Inner_PV',
-         'type'     : 'rcc',
-         'inputs'   : [0, 0, cd.PV_bottom_inner, 0, 0, cd.PV_height_inner, cd.PV_inner_radius],
+         'type'     : 'CZ',
+         'inputs'   : [cd.PV_inner_radius],
          'number'   : 802},
-        {'comment'  : 'Inner_dome_sphere',
-         'type'     : 'S',
-         'inputs'   : [0, 0, cd.PV_top_outer,cd.PV_inner_radius],
+        {'comment'  : 'PV_cyl_upper_extent',
+         'type'     : 'PZ',
+         'inputs'   : [cd.PV_height_inner],
          'number'   : 803},
-        {'comment'  : 'Outer_dome_sphere',
-         'type'     : 'S',
-         'inputs'   : [0, 0, cd.PV_top_outer,cd.PV_outer_radius],
+        {'comment'  : 'PV_cyl_lower_extent',
+         'type'     : 'PZ',
+         'inputs'   : [cd.PV_bottom_inner],
          'number'   : 804},
         {'comment'  : 'Inner_dome_sphere',
          'type'     : 'S',
-         'inputs'   : [0, 0, cd.PV_bottom_outer,cd.PV_inner_radius],
+         'inputs'   : [0, 0, cd.PV_height_inner,cd.PV_inner_radius],
          'number'   : 805},
         {'comment'  : 'Outer_dome_sphere',
          'type'     : 'S',
-         'inputs'   : [0, 0, cd.PV_bottom_outer,cd.PV_outer_radius],
-         'number'   : 806}
+         'inputs'   : [0, 0, cd.PV_height_inner,cd.PV_outer_radius],
+         'number'   : 806},
+        {'comment'  : 'Inner_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_bottom_inner,cd.PV_inner_radius],
+         'number'   : 807},
+        {'comment'  : 'Outer_dome_sphere',
+         'type'     : 'S',
+         'inputs'   : [0, 0, cd.PV_bottom_inner,cd.PV_outer_radius],
+         'number'   : 808}
         ])
 
 
@@ -254,11 +295,11 @@ def make_shielding():
     
     shielding_cell = string.cell(900,[
         {'comment'  : 'Concrete Shielding',
-         'surfs'    : [-900, 901, -902, 903],
+         'surfs'    : [-900, 801, -902, 903, 806],
          'material' : 'Concrete, Portland',
          'imp'      : 1},
         {'comment'  : 'Water Shielding',
-         'surfs'    : [([-901, -902, 804, 801.2],[903, -901, 806, 801.3])],
+         'surfs'    : [([-801, 806, -902, 803],[-801, 808, 903, -804])],
          'material' : 'Water, Liquid',
          'imp'      : 1
          }])

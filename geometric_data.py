@@ -1,11 +1,11 @@
 # Pressure Vessel Data
-PV_inner_radius = 200
 PV_thickness    = 50
 PV_height       = 600
 
 Core_height     = 300
 TC_radius       = 100  # Thermal core region radius
-FC_radius       = 175  # Fast core region radius
+FC_rad_thick    = 75  # Fast core region radius
+GR_rad_thick    = 50   # Graphite reflector thickness
 Core_shroud_th  = 1    # Thickness of the core shroud
 
 # shielding dimensions
