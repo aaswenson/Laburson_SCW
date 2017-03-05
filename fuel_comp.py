@@ -3,7 +3,7 @@
 import math 
 import computed_data as cd
 from pyne.material import Material
-
+import pyne.data as pyne_data
 def iterate_fuel_manifest():
     """Unpack fuel data.
     
@@ -37,7 +37,8 @@ def make_fuel_composition_pyne(fuel_data):
     pyne_fuels = {}
     for fuel_type in fuel_data:
         data = fuel_data[fuel_type]
-        A_cell  = data['pitch']*data['pitch']
+        A       = data['pitch']/math.sqrt(3)
+        A_cell  = 1.5*A*A*math.sqrt(3)
         D_pin   = data['pitch']/data['PD']
         D_fuel  = D_pin - 2*data['clad_th']
         A_pin   = 3.1415*(D_pin*D_pin)/4
@@ -49,33 +50,42 @@ def make_fuel_composition_pyne(fuel_data):
         frac_clad = A_clad/A_cell
         frac_mod  = A_mod/A_cell
 
-        m_fuel = cd.rho_UO2*frac_fuel
-        m_clad = cd.rho_SS*frac_clad
-        m_mod  = cd.rho_H2O*frac_mod
-        
-        m      = m_fuel + m_clad + m_mod
+        fuel_m    = {'U235'  : (1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*data['enrich_U']/pyne_data.atomic_mass('U235'),
+                     'U238'  : (1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*(1-data['enrich_U'])/pyne_data.atomic_mass('U238'),
+                     'Pu239' : data['mfrac_Pu']*data['enrich_Pu']/pyne_data.atomic_mass('Pu239'),
+                     'Pu240' : data['mfrac_Pu']*(1 - data['enrich_Pu'])/pyne_data.atomic_mass('Pu240'),
+                     'Np237' : data['mfrac_Np']/pyne_data.atomic_mass('Np237'),
+                     'Am243' : data['mfrac_Am']/pyne_data.atomic_mass('Am243')
+                     }
+        MW_fuel =  2*pyne_data.atomic_mass('O') # add oxygen to the fuel
+        m = 0          # intialize molecular fuel weight for future calculation
+        for isotope in fuel_m:
+                m  += fuel_m[isotope]
+        # calculate N dens from atom frac
+        fuel_afrac = {}
+        for isotope in fuel_m:
+            fuel_afrac[isotope] = fuel_m[isotope]/m
+        # Get fuel mix atomic mass
+        for isotope in fuel_afrac:
+            MW_fuel += pyne_data.atomic_mass(isotope)*fuel_afrac[isotope]
+        # calculate fuel isotope num dens
+        fuel_ndens = {}
+        for isotope in fuel_afrac:
+            fuel_ndens[isotope] = frac_fuel*fuel_afrac[isotope]*6.022e23*cd.rho_UO2/(MW_fuel*1e24)
+        fuel_ndens['O'] = (frac_fuel*2*cd.rho_UO2/MW_fuel + frac_mod*cd.rho_H2O/(2*pyne_data.atomic_mass('H') + pyne_data.atomic_mass('O')))*6.022e-1
+        fuel_ndens['H'] = frac_mod*2*cd.rho_H2O*6.022e-1/(2*pyne_data.atomic_mass('H')+pyne_data.atomic_mass('O'))
+        # calculate atom fracs for homogenized fuel region
 
-        mfrac_fuel = m_fuel/m
-        mfrac_clad = m_clad/m
-        mfrac_mod  = m_mod/m
+        fuel_mod_pyne = Material()
+        fuel_mod_pyne.from_atom_frac(fuel_ndens)
 
-
-        mfrac_U = mfrac_fuel*(1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*0.333
-        mfrac_U235 = mfrac_U*data['enrich_U']
-        mfrac_U238 = mfrac_U*(1 - data['enrich_U'])
-        mfrac_Pu239 = mfrac_fuel*data['mfrac_Pu']*data['enrich_Pu']*0.333
-        mfrac_Pu240 = mfrac_fuel*data['mfrac_Pu']*(1.0-data['enrich_Pu'])*0.333
-        mfrac_O     = mfrac_fuel*0.667 + mfrac_mod*0.333
-        mfrac_H     = mfrac_mod*0.667
-
-        fuel_composition = {'U235':mfrac_U235,'U238':mfrac_U238,'Pu239':mfrac_Pu239,'Pu240':mfrac_Pu240,'Np237':data['mfrac_Np']*0.333,'Am241':data['mfrac_Am']*0.333,'O':mfrac_O,'H':mfrac_H}
-        fuel_mat = Material(fuel_composition)
-        
         clad_mat = cd.pyne_mats['Steel, Stainless 304']
-        
-        homog_fuel = clad_mat*mfrac_clad + fuel_mat
-        pyne_fuels[data['type']] = homog_fuel
 
+        homog_fuel = fuel_mod_pyne + clad_mat*frac_clad
+        
+        pyne_fuels[data['type']] = homog_fuel
+        
+    
     return pyne_fuels
 
 

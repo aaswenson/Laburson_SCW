@@ -386,11 +386,10 @@ def write_data_card():
                 'category' : 'mode',
                 'particle' : 'n',
                 'comment'  : 'Problem Type'}))
-
     kcode = ''.join(wc.write_general_data({
                 'category' : 'kcode',
                 'kcode'    : '5000 1 15 25',
-                'ksrc'     : '0 0 0\n     0 -250 0',
+                'ksrc'     : '0 0 0\n         0 -250 0\n        -150 0 -100\n        150 0 0\n        0 150 0\n        -150 0 0\n        0 -150 0\n        150 0 100\n        0 150 100\n        0 0 100\n        -150 0 100',
                 'comment'  : 'criticality card'}))
 
     return mode, kcode
