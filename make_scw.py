@@ -425,7 +425,7 @@ ${comm_mk}  Shielding level      \n${shielding_surfs}
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  Burnup Card
 ${comm_mk}                       \n${burn_card}${comm_mk}
-${comm_mk}  MATERIAL             \n${material_card}
+${comm_mk}  MATERIAL             \n${material_card}${comm_mk}
 ${comm_mk}  DATA
 ${comm_mk}    kcode              \n${kcode}
 ${comm_mk}                       \n${mode}
