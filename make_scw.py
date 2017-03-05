@@ -410,6 +410,7 @@ def make_SCW():
     # Write general data cards.
     materials_card = write_material_card()
     [mode, kcode]  = write_data_card()
+    burnup_card    = wc.make_burnup_card()
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
@@ -422,7 +423,9 @@ ${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}${comm_mk}
 ${comm_mk}  Shielding level      \n${shielding_surfs} 
 ${comm_mk}  -------------------------------  DATA CARD  ------------------------------  ${comm_mk}
-${comm_mk}  MATERIAL             \n${material_card}${comm_mk}
+${comm_mk}  Burnup Card
+${comm_mk}                       \n${burn_card}${comm_mk}
+${comm_mk}  MATERIAL             \n${material_card}
 ${comm_mk}  DATA
 ${comm_mk}    kcode              \n${kcode}
 ${comm_mk}                       \n${mode}
@@ -438,6 +441,7 @@ ${comm_mk}  ------------------------------  End of file  -----------------------
                                       outside_world_cells    = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       material_card          = materials_card,
+                                      burn_card              = burnup_card,
                                       kcode                  = kcode,
                                       mode                   = mode,
                                       comm_mk                = wc.comment_mark)

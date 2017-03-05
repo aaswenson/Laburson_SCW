@@ -53,6 +53,16 @@ c  Shielding level
 903 PZ -650                                                  $Lower_shield_plane
  
 c  -------------------------------  DATA CARD  ------------------------------  c
+c  Burnup Card
+c                       
+burn  time=10 9R 50 9R power=1 pfrac=1 19R bopt=1 14 -1            $Burnup_input
+      mat=10000000 50000000                                            $burn_mat
+      omit= -1 46  66159 67163 67164 67166 68163 68165 68169 69166    $burn_omit
+         69167 69171 69172 69173 70168 70169 70170 70171 70172 70173  $burn_omit
+         70174 6014 7016 39087 39092 39093 40089 40097 41091 41092    $burn_omit
+         41096 41097 41098 41099 42091 42093 70175 70176 71173 71174  $burn_omit
+         71177 72175 72181 72182 73179 73183 74179 74181              $burn_omit
+c
 c  MATERIAL             
 c    Material Data                 
 C name: Carbon, Graphite (reactor grade)
@@ -208,7 +218,7 @@ m50000000
      94240 -1.0033e-01
      95243 -7.9629e-03
 c
-c
+
 c  DATA
 c    kcode              
 kcode 5000 1 15 25 

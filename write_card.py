@@ -1,6 +1,5 @@
 import material_data as md
 import computed_data as cd
-
 comment_EOL = '$'
 comment_mark = 'c'
 
@@ -209,6 +208,73 @@ def write_general_data(data):
     return data_str
 
 
+def make_burnup_card():
+    """Make burnup cards.
+    
+    This module makes burnup cards for fuel pins.
+    * burn_mat: Burnup material card. Material to be burned.
+        Corresponds identically to material number
+        specified on a material specification card.
+
+    Arguments:
+        fuel_id (int)[#]: Fuel ID number of a pin.
+        rad_div (int)[#]: Number of radial divisions in a pin active region.
+        axi_div (int)[#]: Number of axial divisions in a pin active region.
+        
+    Returns:
+        burn_str: Burnup material card strings.
+
+    """
+    
+    burn_str = 'burn '  # Initialize string to write burnup card.
+    burn_input = {"time": '10 9R 50 9R',  # Incremental time duration for each burn step.
+                  "pfrac": '1 19R',  # Fraction of total power applied to each burn step.
+                  "power": 1,  # Total recoverable fission system power. [MW]
+                  "bopt": '1 14 -1',  # Output control parameters.
+                  "comment": "Burnup_input"}
+
+
+    for key in sorted(burn_input.keys(), reverse=True):
+        if key == 'time':
+            burn_str += " time={0}".format(burn_input[key])
+        elif key == 'pfrac':
+            burn_str += " pfrac={0}".format(burn_input[key])
+        elif key == 'power':
+            burn_str += " power={0}".format(burn_input[key])
+        elif key == 'bopt':
+            burn_str += " bopt={0}".format(burn_input[key])
+        else:
+            continue
+
+    burn_str = ''.join(cut_line(' ', burn_str, burn_input["comment"]))
+
+    # Write material entries.
+    burn_mat = '      mat='  # Initialize string to write material entries.
+    
+    file_obj = open('fuel_ids.csv')
+    fuel_ids = file_obj.readlines()
+    del fuel_ids[0]
+    
+    for fuel_region in fuel_ids:
+        
+        burn_mat += fuel_region.split(',')[1]+ ' '
+    file_obj.close()    
+    burn_str += ''.join(cut_line('  ', burn_mat, 'burn_mat'))
+    # Write omit entries.
+    # ZAIDs to be omitted.
+    omit_list = [66159, 67163, 67164, 67166, 68163, 68165, 68169, 69166, 69167, 69171, 69172, 69173, 70168, 70169, 70170, 70171, 70172, 70173, 70174,
+                 6014, 7016, 39087, 39092, 39093, 40089, 40097, 41091, 41092, 41096, 41097, 41098, 41099, 42091, 42093, 70175, 70176, 71173, 71174,
+                 71177, 72175, 72181, 72182, 73179, 73183, 74179, 74181]
+    omit_str = ''  # Initialize string to write omit entries.
+    
+    for ZAID in omit_list:
+        omit_str += " {0}".format(ZAID)
+        
+    burn_omit = "      omit= -1 {0} {1}".format(len(omit_list), omit_str)
+    
+    burn_str += ''.join(cut_line(' ', burn_omit, 'burn_omit'))
+        
+    return burn_str
 
 
 
