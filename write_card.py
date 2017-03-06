@@ -229,8 +229,8 @@ def make_burnup_card():
     """
     
     burn_str = 'burn '  # Initialize string to write burnup card.
-    burn_input = {"time": '10 9R 50 9R',  # Incremental time duration for each burn step.
-                  "pfrac": '1 19R',  # Fraction of total power applied to each burn step.
+    burn_input = {"time": '54.75 9R',  # Incremental time duration for each burn step.
+                  "pfrac": '9R',  # Fraction of total power applied to each burn step.
                   "power": 1,  # Total recoverable fission system power. [MW]
                   "bopt": '1 14 -1',  # Output control parameters.
                   "comment": "Burnup_input"}
