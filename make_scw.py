@@ -75,8 +75,10 @@ def iterate_fuel_regions():
         fuel_mat_num = int(data[1])
         if fuel_mat_num/10000000 < 5:
             surfs = [-501, -601, 605]
+            vol=21205750
         else:
             surfs = [-606, 605, 604, -501]
+            vol=26507188
         fuel_mat = pyne_fuels[data[0]]
         data_list += wc.write_fuel_data(fuel_mat, fuel_mat_num)
         cell_list += string.cell(fuel_mat_num, [
@@ -84,7 +86,8 @@ def iterate_fuel_regions():
                'surfs'    : [surfs],
                'material' : fuel_mat_num,
                'imp'      : 1,
-               'density'  : data[2]
+               'density'  : data[2],
+               'vol'      : vol
                }])
     cell_str = ''.join(cell_list)
     data_str = ''.join(data_list)

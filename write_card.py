@@ -143,8 +143,10 @@ def write_cell_card(number,data):
             density = cd.pyne_mats[cell['material']].density
         surfaces = build_surface_tree(cell['surfs'])[0]
         if cell['material'] != 'void':
-            cell_list = cut_line(' ', "{0} {1} {2} {3} imp:n={4}".format(number+i,
-                material_num,-density,surfaces, cell['imp']), cell['comment'])
+            if 'vol' in cell.keys():
+                cell_list = cut_line(' ',  "{0} {1} {2} {3} imp:n={4} vol={5}".format(number+i, material_num, -density, surfaces, cell['imp'], cell['vol']), cell['comment'])
+            else:
+                cell_list = cut_line(' ',  "{0} {1} {2} {3} imp:n={4}".format(number+i, material_num, -density, surfaces, cell['imp']), cell['comment'])
         else:
             cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, cell['imp']), cell['comment'])
         cell_str += ' '.join(cell_list)
@@ -264,7 +266,9 @@ def make_burnup_card():
     # ZAIDs to be omitted.
     omit_list = [66159, 67163, 67164, 67166, 68163, 68165, 68169, 69166, 69167, 69171, 69172, 69173, 70168, 70169, 70170, 70171, 70172, 70173, 70174,
                  6014, 7016, 39087, 39092, 39093, 40089, 40097, 41091, 41092, 41096, 41097, 41098, 41099, 42091, 42093, 70175, 70176, 71173, 71174,
-                 71177, 72175, 72181, 72182, 73179, 73183, 74179, 74181]
+                 71177, 72175, 72181, 72182, 73179, 73183, 74179, 74181, 8018, 8019, 9018, 10021, 12027, 13026, 13028, 14027, 14031, 16031, 16035, 16037, 17034, 17036, 
+                 17038, 18037, 18039, 22051, 23047, 23048, 23049, 23052, 23053, 23054, 24049, 24051, 24055, 24056, 25051, 25052, 25053, 25054, 25056, 25057, 25058, 26053, 
+                 26055, 26059, 26060, 26061, 27057, 27060, 27061, 27062, 27063, 27064, 28057, 28063, 28065, 29062, 29064, 29066]
     omit_str = ''  # Initialize string to write omit entries.
     
     for ZAID in omit_list:
