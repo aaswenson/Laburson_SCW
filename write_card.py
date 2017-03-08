@@ -281,4 +281,31 @@ def make_burnup_card():
     return burn_str
 
 
+def add_water_cells(lattice_map, water_bundle):
+
+    
+    req_length = len(max(lattice_map))
+    buffer_row = ' '.join(np.repeat(water_bundle, req_length + 2).tolist()) + '\n'
+    formatted_lattice_map = buffer_row
+    Top = True
+    for row in lattice_map:
+        row_str = ' '.join([str(i) for i in row])
+        print row_str
+        n_water_bund = req_length - len(row)   
+        added_water = np.repeat(water_bundle, n_water_bund).tolist()
+        water_str = ' '.join([str(i) for i in added_water])
+        if len(row) == req_length:
+            formatted_row = "{0} {1} {2}\n".format(water_bundle, row_str, water_bundle)
+            Top = False
+        elif Top == True:
+            formatted_row = "{0} {1} {2} {3}\n".format(water_bundle, water_str, row_str, water_bundle)
+        else:
+            formatted_row = "{0} {1} {2} {3}\n".format(water_bundle, row_str, water_str, water_bundle)
+        print formatted_row 
+        formatted_lattice_map += formatted_row
+
+    formatted_lattice_map += buffer_row
+        
+    return formatted_lattice_map
+
 
