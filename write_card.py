@@ -126,34 +126,55 @@ def apply_MCNP_operator(operator,items,state):
         lh_p = "("
     return lh_p + delimiter[operator].join(items) + rh_p
 
-def write_cell_card(number,data):
-    cell_str = ''
-    i = 0
-    for cell in data:
-        if type(cell['material']) == int:
-            material_num = cell['material'] 
-            density = 5
-        else:
-            material_num = md.material_dict[cell['material']]['mat_num']
-
-        # check for provided density for fuels
-        if 'density' in cell.keys():
-            density = float(cell['density'])
-        else:
-            density = cd.pyne_mats[cell['material']].density
-        surfaces = build_surface_tree(cell['surfs'])[0]
-        if cell['material'] != 'void':
-            if 'vol' in cell.keys():
-                cell_list = cut_line(' ',  "{0} {1} {2} {3} imp:n={4} vol={5}".format(number+i, material_num, -density, surfaces, cell['imp'], cell['vol']), cell['comment'])
-            else:
-                cell_list = cut_line(' ',  "{0} {1} {2} {3} imp:n={4}".format(number+i, material_num, -density, surfaces, cell['imp']), cell['comment'])
-        else:
-            cell_list = cut_line(' ',"{0} {1} {2} imp:n={3}".format(number, 0, surfaces, cell['imp']), cell['comment'])
-        cell_str += ' '.join(cell_list)
-        i += 1
-    return cell_str
+def write_cell_card(number, data, mat=0):
+    cell_list    = []
+    
+    if 'fuel' in data.keys():
+        density = mat.density
+        
+    else: 
+        density = -cd.pyne_mats[cell_data['material'].density
+    for idx, cell in enumerate(data):
+        cell_list += make_cell_card(number + idx, cell, density)
+    
+    return ' '.join(cell_list)
     
 
+def make_cell_card(number, cell_data, density):
+    
+
+
+    
+    # Check if it's void cell.
+    if cell_data['material'] == 'void':
+        cell_str = "{0} 0 ".format(number)
+    else:
+        cell_str = "{0} {1} {2} ".format(number,
+                                         cell_data['mat_num'],
+                                         density)
+
+    # Make a cell geometry with given surface arguments.
+    cell_str += build_surface_tree(cell_data['surf_list'])[0]
+
+    # Check if it has volume entry.
+    if cell_data['vol']:
+        cell_str += " vol={0}".format(cell_data['vol'])
+    # Check if it has lattice card.
+    if cell_data['lat']:
+        cell_str += " lat={0}".format(cell_data['lat'])
+    # Check if it has fill card.
+    if cell_data['fill']:
+        cell_str += " fill={0}".format(cell_data['fill'])
+    # Check if it has universe number entry.
+    if cell_data['univ']:
+        cell_str += " u={0}".format(cell_data['univ'])
+
+    # Write importance.
+    cell_str += "imp:n= {0}".format(cell_data['imp'])        
+    # Make list of strings to satisfy the limit of line length.
+    cell_list = cut_line(' ', cell_str, cell_data['comment'])
+    
+    return cell_list
 
 def write_surf_card(data):
     surf_str = ''
@@ -230,8 +251,8 @@ def make_burnup_card():
     
     burn_str = 'burn '  # Initialize string to write burnup card.
     burn_input = {"time": '54.75 9R',  # Incremental time duration for each burn step.
-                  "pfrac": '9R',  # Fraction of total power applied to each burn step.
-                  "power": 1,  # Total recoverable fission system power. [MW]
+                  "pfrac": '1 9R',  # Fraction of total power applied to each burn step.
+                  "power": 1341,  # Total recoverable fission system power. [MW]
                   "bopt": '1 14 -1',  # Output control parameters.
                   "comment": "Burnup_input"}
 
@@ -281,31 +302,32 @@ def make_burnup_card():
     return burn_str
 
 
-def add_water_cells(lattice_map, water_bundle):
+def convert_core_lattice(water_bundle):
 
-    
-    req_length = len(max(lattice_map))
-    buffer_row = ' '.join(np.repeat(water_bundle, req_length + 2).tolist()) + '\n'
-    formatted_lattice_map = buffer_row
+    lattice_map = import_core_map()
+    row_length = []
+    for row in lattice_map:
+        row_length.append(len(row))
+
+    req_length = max(row_length)
+    formatted_lattice_map = ''
     Top = True
     for row in lattice_map:
+        print len(row)
         row_str = ' '.join([str(i) for i in row])
-        print row_str
-        n_water_bund = req_length - len(row)   
+        n_water_bund = req_length - len(row)  
         added_water = np.repeat(water_bundle, n_water_bund).tolist()
         water_str = ' '.join([str(i) for i in added_water])
-        if len(row) == req_length:
-            formatted_row = "{0} {1} {2}\n".format(water_bundle, row_str, water_bundle)
+        if (Top == True) and (len(row) < req_length):
+            formatted_row = "{0} {1} {2} {0}\n".format(water_bundle, water_str, row_str)
+        elif len(row) == req_length:
+            formatted_row = "{0} {1} {0}\n".format(water_bundle, row_str, water_bundle)
             Top = False
-        elif Top == True:
-            formatted_row = "{0} {1} {2} {3}\n".format(water_bundle, water_str, row_str, water_bundle)
         else:
-            formatted_row = "{0} {1} {2} {3}\n".format(water_bundle, row_str, water_str, water_bundle)
-        print formatted_row 
-        formatted_lattice_map += formatted_row
-
-    formatted_lattice_map += buffer_row
+            formatted_row = "{0} {1} {2} {0}\n".format(water_bundle, row_str, water_str)
+        formatted_lattice_map += formatted_row.replace('W', water_bundle)
         
     return formatted_lattice_map
+
 
 

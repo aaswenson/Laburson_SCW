@@ -56,44 +56,60 @@ class mcnp_card():
         card = wc.iterate_data_card(category,info)
 
         return card
+def make_fuel_regions():
+    core_map = cd.import_core_map()
+    
+    fc.make_core_lattice(core_map)
 
-def iterate_fuel_regions():
+    bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map)
+
+    return bundle_surfs, bundle_cells, bundle_data, lattice
+
+def iterate_bundles(core_map):
     """Read through all fuel materials and write surf, cell, and material cards.
     """
-    data_list = []
-    cell_list = []
     string = mcnp_card()
 
-    fuel_data  = fc.iterate_fuel_manifest()
-    pyne_fuels = fc.make_fuel_composition_pyne(fuel_data)
-    file_obj = open('fuel_ids.csv')
-    fuel_ids = file_obj.readlines()
-    del fuel_ids[0]
     
-    for fuel_region in fuel_ids:
-        data = fuel_region.split(',')
-        fuel_mat_num = int(data[1])
-        if fuel_mat_num/10000000 < 5:
-            surfs = [-501, -601, 605]
-            vol=21205750
-        else:
-            surfs = [-606, 605, 604, -501]
-            vol=26507188
-        fuel_mat = pyne_fuels[data[0]]
-        data_list += wc.write_fuel_data(fuel_mat, fuel_mat_num)
-        cell_list += string.cell(fuel_mat_num, [
-              {'comment'  : 'Active Fuel',
-               'surfs'    : [surfs],
-               'material' : fuel_mat_num,
-               'imp'      : 1,
-               'density'  : data[2],
-               'vol'      : vol
-               }])
-    cell_str = ''.join(cell_list)
-    data_str = ''.join(data_list)
+    bundle_surfs = string.surf([
+        {'comment' : 'Bundle_rpp',
+         'type'    : 'SO',
+         'inputs'  : [cd.bundle_radius],
+         'number'  : 401}
+    
+    fuel_data = fc.iterate_fuel_manifest()
+    pyne_fuels = fc.make_fuel_composition(fuel_data)
+    bundle_cell_list = []
 
-    return cell_str, data_str
+    for idx_row, row in enumerate(core_map):
+    
+        for idx_col, bundle in enumerate(row):
+        
+            bundle_cell_list, bundle_data += make_bundle(pyne_fuels[bundle], (idx_row, idx_col)) 
+            
+    return bundle_surfs, bundle_cells, bundle_data
 
+
+
+def _make_bundle(mat, pos):
+    
+    string = mcnp_card()
+    univ = 100*pos[0] + pos[1]
+    mat_num = univ
+
+    bundle_cells = string.cell([
+        {'fuel'     : None,
+         'comment'  : '',
+         'surfs'    : -401,
+         'material' : mat,
+         'imp'      : 1, 
+         'vol'      : 1500,
+         'univ'     : univ}
+        ])
+    bundle_mats  = wc.write_fuel_data(mat, univ)
+
+    return bundle_cells, bundle_mats
+    
 def make_active_core():
     """Define the cards to build the active core regions.
     """
@@ -130,7 +146,11 @@ def make_core_shroud():
         {'comment'  : 'Core_shroud', 
          'surfs'    : [([-802, -602, 603, 604],[601, -604, -602, 605])],
          'material' : 'Steel, Stainless 304',
-         'imp'      : 1
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
         }])
     core_shroud_surf = string.surf([
         {'comment'  : 'TC_shroud_inner',
@@ -167,8 +187,12 @@ def make_reflector():
         {'comment'  : 'reflector',
          'surfs'    : [-802, 606, -501, 605],
          'material' : 'Carbon, Graphite (reactor grade)',
-         'imp'      : 1}
-        ])
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
+         }])
     reflector_surfs = string.surf([
         {'comment' : 'Graphite reflector',
          'type'    : 'CZ',
@@ -197,7 +221,11 @@ def make_core_level():
         {'comment'  : 'Core Level', 
          'surfs'    : [([-802, 602,-803],[803, -805], [-602, 501, -601], [-603, 501, -802,604],[-605, -802, 804], [-804, -802, -807])],
          'material' : 'Water, Liquid',
-         'imp'      : 1
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
         }])
 
     [core_shroud_cell, core_shroud_surf] = make_core_shroud()
@@ -244,7 +272,11 @@ def make_pressure_vessel():
         {'comment'  : 'Pressure Vessel', 
             'surfs'    : [([-801, 802, -803, 804], [-806, 805, 803], [-808, 807, -804])],
          'material' : 'Steel, Stainless 304',
-         'imp'      : 1
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
         }])
     pressure_vessel_surf = string.surf([
         {'comment'  : 'Outer_PV',
@@ -300,11 +332,20 @@ def make_shielding():
         {'comment'  : 'Concrete Shielding',
          'surfs'    : [-900, 801, -902, 903, 806],
          'material' : 'Concrete, Portland',
-         'imp'      : 1},
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
+         } ,
         {'comment'  : 'Water Shielding',
          'surfs'    : [([-801, 806, -902, 803],[-801, 808, 903, -804])],
          'material' : 'Water, Liquid',
-         'imp'      : 1
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
          }])
 
     shielding_surfs = string.surf([
@@ -344,7 +385,11 @@ def make_outside_world():
         {'comment'  : 'Outside World', 
          'surfs'    : [(-903, 902,[900, 903, -902])],
          'material' : 'void',
-         'imp'      : 0
+         'imp'      : 0,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None
         }])
 
     return outside_world_cell

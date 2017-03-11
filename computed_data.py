@@ -2,6 +2,16 @@ from geometric_data import *
 import material_data as md
 from material_data import *
 
+def import_core_map():
+    
+    map_file = open('core_map.txt')
+    rows = []
+    for row in map_file:
+        row = row.replace(' ','')
+        row = row.replace('\n','')
+        rows.append(list(row))
+    return rows
+
 
 # Core Shroud Data
 Thermal_shroud_outer = TC_radius + Core_shroud_th
@@ -28,6 +38,7 @@ inner_concrete_radius = PV_outer_radius
 outer_concrete_radius = PV_outer_radius + shielding_thick
 shield_upper_height   = PV_top_outer + containment_water_level
 shield_lower_height   = PV_bottom_outer - shielding_thick
+
 
 # Load Material Library
 pyne_mats = md.load_pyne_matlib()

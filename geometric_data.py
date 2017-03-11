@@ -17,3 +17,5 @@ containment_water_level = 1000
 Core_bottom_position = -150
 Flow_offset          = 50    # Room at top of core for flow to develop into outlet pipe
 
+# miscellaneous 
+bundle_radius = 1000 # large radius sphere for fuel bundles.
