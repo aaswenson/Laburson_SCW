@@ -25,7 +25,7 @@ class mcnp_card():
         Returns: string of the cell card
         """
         
-        card = wc.write_cell_card(number, data)
+        card = wc.iterate_cell_cards(number, data)
 
         return card
 

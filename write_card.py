@@ -1,3 +1,25 @@
+"""Module to write MCNP cards.
+
+This module writes the cards for an MCNP6 input file.
+
+The following functions are contained in this model.
+  * cut_line 
+  * right_align
+  * build_surface_tree
+  * apply_MCNP_operator
+  * iterate_cell_cards
+  * write_cell_card
+  * write_surf_card
+  * iterate_data_card
+  * write_material_card
+  * write_fuel_data
+  * write_general_data
+  * make_burnup_card
+  * convert_core_lattice
+  * make_lattice_map
+  * like_but
+"""
+
 import material_data as md
 import numpy as np
 import fuel_comp as fc
@@ -139,14 +161,23 @@ def apply_MCNP_operator(operator, items, state):
     return lh_p + delimiter[operator].join(items) + rh_p
 
 
-def write_cell_card(number, data):
+def iterate_cell_cards(number, data):
+    """Iterate through and write cell cards.
+
+    This function unpacks cell data and calls function to write the cell cards.
+
+    Args:
+        number (int): base cell number
+        data (dict): cell data used to write card
+    Returns:
+        cell_str (str): MCNP cell card
+    """
     cell_list = []
     for idx, cell in enumerate(data):
         if 'fuel' in cell.keys():
             if cell['fuel']:
                 cell['mat_num'] = cell['univ']
                 mat = pyne_fuels[cell['material']]
-
             else:
                 mat = cd.pyne_mats[cell['material']]
                 cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
@@ -154,13 +185,25 @@ def write_cell_card(number, data):
             mat = cd.pyne_mats[cell['material']]
             cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
         density = mat.density
-        cell_list += make_cell_card(number + idx, cell, density)
+      
+        cell_list += write_cell_card(number + idx, cell, density)
+    # concatenate all cell lists into one string
     cell_str = ''.join(cell_list)
     return cell_str
 
 
-def make_cell_card(number, cell_data, density):
+def write_cell_card(number, cell_data, density):
+    """Write the cell card string.
 
+    This function produces an MCNP6 cell card string.
+
+    Args:
+        number (int): cell number
+        cell_data (dict): data required to right the cell
+        density (float): cell density
+    Returns:
+        cell_list (list): list with MCNP cell strings.
+    """
     # Check if it's void cell.
     if cell_data['material'] == 'void':
         cell_str = "{0} 0 ".format(number)
@@ -188,12 +231,21 @@ def make_cell_card(number, cell_data, density):
     # Write importance.
     cell_str += " imp:n={0}".format(cell_data['imp'])
     # Make list of strings to satisfy the limit of line length.
-    cell_list = cut_line(' ', cell_str, cell_data['comment'])
-
+    cell_list = cut_line(' ', cell_str, cell_data['comment'])   
+    
     return cell_list
 
 
 def write_surf_card(data):
+    """Write surface card.
+
+    This function writes an MCNP6 surface card.
+
+    Args:
+        data (dict): dictionary with surface parameters.
+    Returns:
+        surf_str (str): MCNP surface string.
+    """
     surf_str = ''
     for surface in data:
         parameters = ''
@@ -202,7 +254,6 @@ def write_surf_card(data):
         surf_str += ' '.join(cut_line(' ', "{0} {1} {2}".format(surface['number'], surface['type'],
                                                                 parameters), surface['comment']))
     return surf_str
-
 
 def iterate_data_card(category, data):
     data_card = ''
@@ -230,7 +281,6 @@ def write_material_card(material_name):
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
     return ' '.join(data_list)
 
-
 def write_fuel_data(mat, material_num):
     unexpanded_mat = pyne_fuels[mat]
     pyne_mat = unexpanded_mat.expand_elements()
@@ -239,7 +289,6 @@ def write_fuel_data(mat, material_num):
 #   pyne_mat.metadata['table_ids'] = XS_library
     data_list = [str(pyne_mat.mcnp())]
     return ' '.join(data_list)
-
 
 def write_general_data(data):
 
@@ -277,22 +326,21 @@ def make_burnup_card():
                   "bopt": '1 14 -1',  # Output control parameters.
                   }
 
-    for key in sorted(burn_input.keys(), reverse = True):
+    for key in sorted(burn_input.keys(), reverse=True):
 
         burn_str += "{0}={1} ".format(key, burn_input[key])
 
     core_map = cd.import_core_map()
     bundle_map = cd.get_master_bundles(core_map)[1]
-    
+
     # Write material entries.
     burn_mat = '\n        mat='  # Initialize string to write material entries.
-    
+
     for fuel_id in sorted(bundle_map):  # For all fuel ID numbers.
         if bundle_map[fuel_id] != 'W':
-            base_mat_id = 1000*(fuel_id[0] + 1) + fuel_id[1]
-            burn_mat += "  {0}".format(base_mat_id) 
+            base_mat_id = 1000 * (fuel_id[0] + 1) + fuel_id[1]
+            burn_mat += "  {0}".format(base_mat_id)
     burn_str += ''.join(cut_line('  ', burn_mat, 'burn_mat'))
-    
 
     # ZAIDs to be omitted.
     omit_list = [66159, 67163, 67164, 67166, 68163, 68165, 68169, 69166, 69167, 69171, 69172, 69173, 70168, 70169, 70170, 70171, 70172, 70173, 70174,
