@@ -62,10 +62,11 @@ def make_fuel_regions():
 
     string = mcnp_card()
     core_map = cd.import_core_map()
-    
     formatted_core_map, row, col = wc.convert_core_lattice(core_map, '1000')
-
-    bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map)
+    
+    core_map_save = cd.import_core_map()
+    print core_map_save
+    bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map_save)
     bundle_surfs += string.surf([
         {'comment' : 'bundle rhp',
          'type'    : 'rhp',
@@ -82,7 +83,7 @@ def make_fuel_regions():
                  'surfs'    : [([-501, -601, 605],[-606, 605, 604, -501])],
                  'material' : 'void',
                  'imp'      : 1,
-                 'univ'     : 501,
+                 'univ'     : None,
                  'fill'     : 500,
                  'vol'      : None,
                  'lat'      : None
@@ -108,8 +109,8 @@ def iterate_bundles(core_map):
 
     for master in master_bundles.values():
         del bundle_map[master]
-
-    for bundle in bundle_map:
+    for bundle in sorted(bundle_map):
+        
         cell, data = copy_bundle(bundle, bundle_map[bundle], master_bundles)
         bundle_cells += cell
         bundle_data  += data
@@ -130,7 +131,6 @@ def make_master_bundles(master_bundles):
     cell_save = ''
     data_save = ''
     for bundle in master_bundles:
-        print bundle
         if bundle == 'W':
             pass            
         else:

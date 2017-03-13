@@ -8,21 +8,22 @@ comment_mark = 'c'
 fuel_data = fc.iterate_fuel_manifest()
 pyne_fuels = fc.make_fuel_composition(fuel_data)
 
+
 def cut_line(split_str, undiv_str, comment):
     """Cut a string to meet maximum length of a line for MCNP.
-    
+
     This function cuts a single undivided string into a list of strings.
     Indicative string of division is given as an input of the function
     so that user can choose how to divide each string separately.
     This function writes a comment string, if given, with a comment character
     at the end of each line.
     Maximum length of line is still satisfied with the added comment.
-        
+
     Arguments:
         split_str (str)[-]: Indicative string of division.
         undiv_str (str)[-]: Single undivided string.
         comment (str)[-]: Additional comment string.
-        
+
     Returns:
         string_list (str)[-]: List of strings that satisfy
                               the maximum length of line.
@@ -37,11 +38,13 @@ def cut_line(split_str, undiv_str, comment):
 
     string_list = [undiv_str]
 
-    # Make a list of strings until each string satisfies the limit of line length.
+    # Make a list of strings until each string satisfies the limit of line
+    # length.
     while len(string_list[-1]) > str_limit:
 
         # For an undivided string, find from the right a starting index number
-        # that gives the first indicative string within the first 80 characters.
+        # that gives the first indicative string within the first 80
+        # characters.
         split_index = string_list[-1].rfind(split_str, 0, str_limit)
 
         # Split current string into two strings.
@@ -49,51 +52,52 @@ def cut_line(split_str, undiv_str, comment):
         # Indent the second string.
         div_list = [right_align(string_list[-1][:split_index], comment, max_str_limit),
                     indent + string_list[-1][split_index + len(split_str):]]
-        
+
         # Reset the limit of line length by removing the string of division.
-        str_limit = max_str_limit + len(split_str) - len(comment) - len(comment_init)
+        str_limit = max_str_limit + \
+            len(split_str) - len(comment) - len(comment_init)
 
         # Delete previous undivided string and append new list of strings.
         del string_list[-1]
         string_list += div_list
 
-    # Add comment on the last string that already satisfies the limit of line length.
+    # Add comment on the last string that already satisfies the limit of line
+    # length.
     string_end = string_list[-1]
     del string_list[-1]
     string_list += [right_align(string_end, comment, max_str_limit)]
-        
+
     return string_list
 
 
 def right_align(string, comment, max_limit):
     """Add right-aligned comment to a string with the maximum line length.
-    
+
     This function adds given comment to the given string. For better readability, 
     it adds the comment further right until it reaches the maximum length of line.
-        
+
     Arguments:
         string (str)[-]: A string to which given comment will be added.
         comment (str)[-]: Comment string.
         max_limit (int)[-]: Maximum length of line.
-        
+
     Returns:
         oneline (str)[-]: One-line string with right-aligned comment.
     """
     num = len(string)
-    
+
     if len(comment) == 0:  # If the given comment is blank.
         comment_str = ''
     else:
         comment_str = "{0}{1}".format(comment_EOL, comment)
-        
+
     oneline = "{0}{1:>{2}}\n".format(string, comment_str, max_limit - num)
     return oneline
 
 
-
 def build_surface_tree(surface, state=0):
     """Create surface algebra tree
-    
+
     Args: surface (list): List of surfaces with interesection/union relationships
           state (int): initialize state to 0, state < 2 indicates a single-layer cell
     Returns: Calls "apply_MCNP_operator" to write and return an MCNP-specific cell definition string
@@ -103,18 +107,20 @@ def build_surface_tree(surface, state=0):
     # check for a simple cell (one "layer" of surface combinations)
     if state < 2:
         state = state + 1
-    # set the operator for every data container, list = intersection, tuple (else) = union
+    # set the operator for every data container, list = intersection, tuple
+    # (else) = union
     if type(surface) == list:
         operator = 'intersection'
     else:
         operator = 'union'
     items = []
     for item in surface:
-        items.append(build_surface_tree(item,state)[0])
+        items.append(build_surface_tree(item, state)[0])
     # call the MCNP-specific string function to write cell definition
-    return apply_MCNP_operator(operator,items,state), state
+    return apply_MCNP_operator(operator, items, state), state
 
-def apply_MCNP_operator(operator,items,state):
+
+def apply_MCNP_operator(operator, items, state):
     """Write cell definition in MCNP-specific format
 
     Args: operator (string): " " or ":" to set inter-surface delimiters
@@ -122,18 +128,19 @@ def apply_MCNP_operator(operator,items,state):
           state (int): call for parentheses if depth surface container > 1 level
     Returns: MCNP cell string
     """
-    delimiter = {'intersection':' ','union':':'}
+    delimiter = {'intersection': ' ', 'union': ':'}
     rh_p = lh_p = ""
     if state > 1:
         # assign extra parantheses delimiters for MCNP
         # rh = right hand, lh = left hand
         rh_p = ")"
         lh_p = "("
-    
+
     return lh_p + delimiter[operator].join(items) + rh_p
 
+
 def write_cell_card(number, data):
-    cell_list    = []
+    cell_list = []
     for idx, cell in enumerate(data):
         if 'fuel' in cell.keys():
             if cell['fuel']:
@@ -150,10 +157,10 @@ def write_cell_card(number, data):
         cell_list += make_cell_card(number + idx, cell, density)
     cell_str = ''.join(cell_list)
     return cell_str
-    
+
 
 def make_cell_card(number, cell_data, density):
-     
+
     # Check if it's void cell.
     if cell_data['material'] == 'void':
         cell_str = "{0} 0 ".format(number)
@@ -179,11 +186,12 @@ def make_cell_card(number, cell_data, density):
         cell_str += " u={0}".format(cell_data['univ'])
 
     # Write importance.
-    cell_str += " imp:n={0}".format(cell_data['imp'])        
+    cell_str += " imp:n={0}".format(cell_data['imp'])
     # Make list of strings to satisfy the limit of line length.
     cell_list = cut_line(' ', cell_str, cell_data['comment'])
-    
+
     return cell_list
+
 
 def write_surf_card(data):
     surf_str = ''
@@ -191,11 +199,12 @@ def write_surf_card(data):
         parameters = ''
         for surf_data in surface['inputs']:
             parameters += str(surf_data) + ' '
-        surf_str += ' '.join(cut_line(' ', "{0} {1} {2}".format(surface['number'],surface['type'],
-                            parameters),surface['comment']))
+        surf_str += ' '.join(cut_line(' ', "{0} {1} {2}".format(surface['number'], surface['type'],
+                                                                parameters), surface['comment']))
     return surf_str
 
-def iterate_data_card(category,data):
+
+def iterate_data_card(category, data):
     data_card = ''
     if category == 'material':
         for material in data:
@@ -216,9 +225,11 @@ def write_material_card(material_name):
 #   pyne_mat.metadata['table_ids'] = XS_library
     data_list = [str(pyne_mat.mcnp())]
     if data['mt']:
-        mt_str = "mt{0:<8} {1}".format(pyne_mat.metadata['mat_number'],data['mt'])
+        mt_str = "mt{0:<8} {1}".format(
+            pyne_mat.metadata['mat_number'], data['mt'])
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
     return ' '.join(data_list)
+
 
 def write_fuel_data(mat, material_num):
     unexpanded_mat = pyne_fuels[mat]
@@ -231,11 +242,12 @@ def write_fuel_data(mat, material_num):
 
 
 def write_general_data(data):
-    
+
     if data['category'] == 'mode':
         data_str = data['category'] + ' ' + data['particle'] + '\nprint'
     elif data['category'] == 'kcode':
-        data_str = "{0} {1} \n{2} {3}".format('kcode',data['kcode'],'ksrc',data['ksrc'])
+        data_str = "{0} {1} \n{2} {3}".format(
+            'kcode', data['kcode'], 'ksrc', data['ksrc'])
     else:
         pass
     return data_str
@@ -243,7 +255,7 @@ def write_general_data(data):
 
 def make_burnup_card():
     """Make burnup cards.
-    
+
     This module makes burnup cards for fuel pins.
     * burn_mat: Burnup material card. Material to be burned.
         Corresponds identically to material number
@@ -253,19 +265,20 @@ def make_burnup_card():
         fuel_id (int)[#]: Fuel ID number of a pin.
         rad_div (int)[#]: Number of radial divisions in a pin active region.
         axi_div (int)[#]: Number of axial divisions in a pin active region.
-        
+
     Returns:
         burn_str: Burnup material card strings.
 
     """
-    
+
     burn_str = 'burn '  # Initialize string to write burnup card.
     burn_input = {"time": '54.75 9R',  # Incremental time duration for each burn step.
-                  "pfrac": '1 9R',  # Fraction of total power applied to each burn step.
-                  "power": 1341,  # Total recoverable fission system power. [MW]
+                  # Fraction of total power applied to each burn step.
+                  "pfrac": '1 9R',
+                  # Total recoverable fission system power. [MW]
+                  "power": 1341,
                   "bopt": '1 14 -1',  # Output control parameters.
                   "comment": "Burnup_input"}
-
 
     for key in sorted(burn_input.keys(), reverse=True):
         if key == 'time':
@@ -283,90 +296,93 @@ def make_burnup_card():
 
     # Write material entries.
     burn_mat = '      mat='  # Initialize string to write material entries.
-    
+
     file_obj = open('fuel_ids.csv')
     fuel_ids = file_obj.readlines()
     del fuel_ids[0]
-    
+
     for fuel_region in fuel_ids:
-        
-        burn_mat += fuel_region.split(',')[1]+ ' '
-    file_obj.close()    
+
+        burn_mat += fuel_region.split(',')[1] + ' '
+    file_obj.close()
     burn_str += ''.join(cut_line('  ', burn_mat, 'burn_mat'))
     # Write omit entries.
     # ZAIDs to be omitted.
     omit_list = [66159, 67163, 67164, 67166, 68163, 68165, 68169, 69166, 69167, 69171, 69172, 69173, 70168, 70169, 70170, 70171, 70172, 70173, 70174,
                  6014, 7016, 39087, 39092, 39093, 40089, 40097, 41091, 41092, 41096, 41097, 41098, 41099, 42091, 42093, 70175, 70176, 71173, 71174,
-                 71177, 72175, 72181, 72182, 73179, 73183, 74179, 74181, 8018, 8019, 9018, 10021, 12027, 13026, 13028, 14027, 14031, 16031, 16035, 16037, 17034, 17036, 
-                 17038, 18037, 18039, 22051, 23047, 23048, 23049, 23052, 23053, 23054, 24049, 24051, 24055, 24056, 25051, 25052, 25053, 25054, 25056, 25057, 25058, 26053, 
+                 71177, 72175, 72181, 72182, 73179, 73183, 74179, 74181, 8018, 8019, 9018, 10021, 12027, 13026, 13028, 14027, 14031, 16031, 16035, 16037, 17034, 17036,
+                 17038, 18037, 18039, 22051, 23047, 23048, 23049, 23052, 23053, 23054, 24049, 24051, 24055, 24056, 25051, 25052, 25053, 25054, 25056, 25057, 25058, 26053,
                  26055, 26059, 26060, 26061, 27057, 27060, 27061, 27062, 27063, 27064, 28057, 28063, 28065, 29062, 29064, 29066]
     omit_str = ''  # Initialize string to write omit entries.
-    
+
     for ZAID in omit_list:
         omit_str += " {0}".format(ZAID)
-        
+
     burn_omit = "      omit= -1 {0} {1}".format(len(omit_list), omit_str)
-    
+
     burn_str += ''.join(cut_line(' ', burn_omit, 'burn_omit'))
-        
+
     return burn_str
 
 
 def convert_core_lattice(lattice_map, water_bundle):
-    
 
-    row_length = []
-    for row in lattice_map:
-        row_length.append(len(row))
+    req_length = max(len(row) for row in lattice_map)
 
-    req_length = max(row_length)
-    
-    x_extent = int(req_length/2) + (req_length % 2 > 0) 
-    y_extent = int(len(lattice_map)/2) + (len(lattice_map) % 2 > 0)
+    x_extent = int(req_length / 2) + (req_length % 2 > 0)
+    y_extent = int(len(lattice_map) / 2) + (len(lattice_map) % 2 > 0)
+
     formatted_lattice_map = ''
     Top = True
 
     for row, bundles in enumerate(lattice_map):
-        row_str = ' '.join([str(1000*(row + 1) + col) for col, bundle in
-            enumerate(bundles)])
-        n_water_bund = req_length - len(bundles)  
+        for col, bundle in enumerate(bundles):
+            if bundle == 'W':
+                bundles[col] = water_bundle
+            else:
+                bundles[col] = str(1000 * (row + 1) + col)
+        row_str = ' '.join(bundles)
+        n_water_bund = req_length - len(bundles)
         added_water = np.repeat(water_bundle, n_water_bund).tolist()
         water_str = ' '.join([str(i) for i in added_water])
-    
+
         if (Top == True) and (len(bundles) < req_length):
-            formatted_row = "{0} {1} {2} {0}".format(water_bundle, water_str, row_str)
+            formatted_row = "{0} {1} {2} {0} ".format(
+                water_bundle, water_str, row_str)
         elif len(bundles) == req_length:
-            formatted_row = "{0} {1} {0}".format(water_bundle, row_str, water_bundle)
+            formatted_row = "{0} {1} {0} ".format(
+                water_bundle, row_str, water_bundle)
             Top = False
         else:
-            formatted_row = "{0} {1} {2} {0}".format(water_bundle, row_str, water_str)
-    
-        formatted_lattice_map += formatted_row.replace('W', water_bundle) 
-    
+            formatted_row = "{0} {1} {2} {0} ".format(
+                water_bundle, row_str, water_str)
+
+        formatted_lattice_map += formatted_row.replace('W', water_bundle)
     formatted_lattice_map += ' imp:n=1'
     return formatted_lattice_map, x_extent, y_extent
 
 
 def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent):
-    
+
     core_lattice_str = "{0} 0 {1} u={2} lat=2 fill=-{3}:{3} -{4}:{4} 0:0\n         {5}"\
-                        .format(cell, 
-                                surf, 
-                                univ, 
-                                x_extent, 
-                                y_extent,
-                                formatted_lattice_map)
+        .format(cell,
+                surf,
+                univ,
+                x_extent,
+                y_extent,
+                formatted_lattice_map)
     lat_list = cut_line(' ', core_lattice_str, '')
-    lat_str  = ''.join(lat_list)
+    lat_str = ''.join(lat_list)
     return lat_str
+
 
 def like_but(base_cell, univ, water):
 
     if water == False:
-        mat = 'mat='+ str(univ)
+        mat = 'mat=' + str(univ)
     else:
         mat = ''
     cell_str = "{0} like {1} but u={0} {2} imp:n=1\n".format(univ,
-            base_cell, mat)
+                                                             base_cell, mat)
 
     return cell_str
