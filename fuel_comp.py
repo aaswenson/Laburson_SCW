@@ -29,11 +29,11 @@ def iterate_fuel_manifest():
         fuel_data[fuel_category]['mfrac_Pu']  = mfrac_Pu
         fuel_data[fuel_category]['mfrac_Np']  = mfrac_Np
         fuel_data[fuel_category]['mfrac_Am']  = mfrac_Am
-
+    
     return fuel_data
 
 
-def make_fuel_composition_pyne(fuel_data):
+def make_fuel_composition(fuel_data):
     pyne_fuels = {}
     for fuel_type in fuel_data:
         data = fuel_data[fuel_type]
@@ -85,7 +85,6 @@ def make_fuel_composition_pyne(fuel_data):
         
         pyne_fuels[data['type']] = homog_fuel
         
-    
     return pyne_fuels
 
 

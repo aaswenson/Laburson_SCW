@@ -12,7 +12,7 @@ def load_pyne_matlib():
     Returns: PyNE material library with structural materials + void material.
     """
     material_lib = MaterialLibrary()
-    material_lib.from_hdf5('SCW_materials.h5')
+    material_lib.from_json('SCW_materials.json')
     void = Material({'':0},0)
     void.metadata['density'] = 0
     void.metadata['name'] = 'void'

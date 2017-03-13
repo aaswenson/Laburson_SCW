@@ -1,5 +1,6 @@
 import write_card as wc
 import computed_data as cd
+import material_data as md
 import fuel_comp as fc
 from string import Template
 class mcnp_card():
@@ -24,7 +25,7 @@ class mcnp_card():
         Returns: string of the cell card
         """
         
-        card = wc.write_cell_card(number,data)
+        card = wc.write_cell_card(number, data)
 
         return card
 
@@ -42,7 +43,7 @@ class mcnp_card():
 
         return card
 
-    def data(self,category,info):
+    def data(self, category, info):
         """Data writer.
 
         This method writes the data cards for the mcnp model.
@@ -53,15 +54,39 @@ class mcnp_card():
         Returns: string of the data card
         """
 
-        card = wc.iterate_data_card(category,info)
+        card = wc.iterate_data_card(category, info)
 
         return card
+
 def make_fuel_regions():
+
+    string = mcnp_card()
     core_map = cd.import_core_map()
     
-    fc.make_core_lattice(core_map)
+    formatted_core_map, row, col = wc.convert_core_lattice(core_map, '1000')
 
     bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map)
+    bundle_surfs += string.surf([
+        {'comment' : 'bundle rhp',
+         'type'    : 'rhp',
+         'inputs'  : [0, 0, -150, 0, 0, 300, 9, 0],
+         'number'  : 500}
+        ])
+    
+    lattice = wc.make_lattice_map(formatted_core_map,
+                                  500, 500, 
+                                 '-500', row, col)
+    lattice  += string.cell(501, [
+                {'fuel'     : None,
+                 'comment'  : 'Active_core',
+                 'surfs'    : [([-501, -601, 605],[-606, 605, 604, -501])],
+                 'material' : 'void',
+                 'imp'      : 1,
+                 'univ'     : 501,
+                 'fill'     : 500,
+                 'vol'      : None,
+                 'lat'      : None
+                 }])
 
     return bundle_surfs, bundle_cells, bundle_data, lattice
 
@@ -69,44 +94,91 @@ def iterate_bundles(core_map):
     """Read through all fuel materials and write surf, cell, and material cards.
     """
     string = mcnp_card()
-
-    
     bundle_surfs = string.surf([
         {'comment' : 'Bundle_rpp',
          'type'    : 'SO',
          'inputs'  : [cd.bundle_radius],
          'number'  : 401}
+        ])
     
-    fuel_data = fc.iterate_fuel_manifest()
-    pyne_fuels = fc.make_fuel_composition(fuel_data)
-    bundle_cell_list = []
+    master_bundles, bundle_map = cd.get_master_bundles(core_map)
+    [ bundle_cells, 
+      bundle_data, 
+      master_bundles ]  = make_master_bundles(master_bundles)
 
-    for idx_row, row in enumerate(core_map):
-    
-        for idx_col, bundle in enumerate(row):
-        
-            bundle_cell_list, bundle_data += make_bundle(pyne_fuels[bundle], (idx_row, idx_col)) 
-            
+    for master in master_bundles.values():
+        del bundle_map[master]
+
+    for bundle in bundle_map:
+        cell, data = copy_bundle(bundle, bundle_map[bundle], master_bundles)
+        bundle_cells += cell
+        bundle_data  += data
+  
     return bundle_surfs, bundle_cells, bundle_data
 
+def make_master_bundles(master_bundles):
+    """Make the master bundle cells.
+    
+    This function produces the cell cards for all unique bundles.
+
+    Args: core_map (list) all fuel assemblies in the core.
+
+    Returns: cell (str) cell card string
+             data (str) mat card string
+             master_bundles (dict) master bundles and locations.
+    """
+    cell_save = ''
+    data_save = ''
+    for bundle in master_bundles:
+        print bundle
+        if bundle == 'W':
+            pass            
+        else:
+            mat = bundle
+            fuel = True
+        univ = 1000*(master_bundles[bundle][0] + 1) + master_bundles[bundle][1]
+        cell, data = make_bundle(mat, fuel, univ)
+        
+        cell_save += cell
+        data_save += data
+    return cell_save, data_save, master_bundles
+
+def copy_bundle(bundle, mat, masters):
+
+    base_cell = 1000*(masters[mat][0] + 1) + masters[mat][1]
+    univ = 1000*(bundle[0] + 1) + bundle[1]
 
 
-def _make_bundle(mat, pos):
+    if mat != 'W':
+        water = False
+        data = wc.write_fuel_data(mat, univ)
+        cell = wc.like_but(base_cell, univ, water)
+    else:
+        cell = ''
+        data = ''
+    
+
+    return cell, data
+
+def make_bundle(mat, fuel, univ):
     
     string = mcnp_card()
-    univ = 100*pos[0] + pos[1]
-    mat_num = univ
 
-    bundle_cells = string.cell([
-        {'fuel'     : None,
+    bundle_cells = string.cell(univ,[
+        {'fuel'     : fuel,
          'comment'  : '',
          'surfs'    : -401,
          'material' : mat,
          'imp'      : 1, 
          'vol'      : 1500,
-         'univ'     : univ}
+         'univ'     : univ,
+         'fill'     : None,
+         'lat'      : None}
         ])
-    bundle_mats  = wc.write_fuel_data(mat, univ)
+    if mat != 'Water, Liquid':
+        bundle_mats  = wc.write_fuel_data(mat, univ)
+    else:
+        return bundle_cells, ''
 
     return bundle_cells, bundle_mats
     
@@ -115,17 +187,24 @@ def make_active_core():
     """
     string = mcnp_card()
 
-    [active_core_cell, active_core_data] = iterate_fuel_regions()
+    [bundle_surfs, 
+     active_core_cells, 
+     active_core_data, 
+     lattice
+     ] = make_fuel_regions()
 
-    active_core_surf = string.surf([
+    active_core_surfs = string.surf([
         {'comment' : 'Upper Active Core',
          'type'    : 'PZ',
          'inputs'  : [cd.Active_core_top],
          'number'  : 501,
          'imp'     : 1
         }])
+    
 
-    return active_core_cell, active_core_surf, active_core_data
+    active_core_surfs += bundle_surfs
+
+    return active_core_cells, active_core_surfs, active_core_data, lattice
 
 def make_core_shroud():
     """Build the core region shroud.
@@ -229,7 +308,10 @@ def make_core_level():
         }])
 
     [core_shroud_cell, core_shroud_surf] = make_core_shroud()
-    [active_core_cell, active_core_surf, active_core_data] = make_active_core()
+    [active_core_cell, 
+     active_core_surf, 
+     active_core_data, 
+     active_core_lattice] = make_active_core()
     [reflector_cell, reflector_surf] = make_reflector()
     cell_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                 \n${core_shroud}\
@@ -237,13 +319,11 @@ ${comm_mk}    Core Water                  \n${core_water}\
 ${comm_mk}    Active Core                 \n${active_core}\
 ${comm_mk}    Reflector Region            \n${reflector}\
 """)
-    
     cell_core_level = cell_core_level_temp.substitute(core_shroud = core_shroud_cell,
                                                  core_water  = core_water_cell,
                                                  active_core = active_core_cell,
                                                  reflector   = reflector_cell,
                                                  comm_mk     = wc.comment_mark)
-
     surf_core_level_temp = Template("""\
 ${comm_mk}    Core Shroud                  \n${core_shroud}\
 ${comm_mk}                                 \n${active_core}\
@@ -254,7 +334,7 @@ ${comm_mk}                                 \n${reflector}\
                                                       reflector   = reflector_surf,
                                                       comm_mk     = wc.comment_mark)
     
-    return cell_core_level, surf_core_level
+    return cell_core_level, surf_core_level, active_core_lattice, active_core_data
 
 def make_pressure_vessel():
     """Make pressure vessel cards.
@@ -416,7 +496,7 @@ def write_material_card():
     string = mcnp_card()
 
     structural_data  = make_structural_data()
-    active_fuel_data = make_active_core()[2]
+    active_fuel_data = make_core_level()[3]
     
     material_card_temp = Template("""\
 ${comm_mk}    Material Data                 \n${structural_materials}${comm_mk}
@@ -451,7 +531,7 @@ def make_SCW():
     """
 
     # Write cell and surface cards for each level of geometry.
-    [cell_core_lvl, surf_core_lvl]                        = make_core_level()
+    [cell_core_lvl, surf_core_lvl, active_core_lattice, active_core_data] = make_core_level()
     [cell_reactor_lvl, surf_reactor_lvl]                  = make_pressure_vessel()
     [cell_shielding, surf_shielding]                      = make_shielding()
     cell_outside_wrld                                     = make_outside_world()
@@ -463,6 +543,7 @@ def make_SCW():
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
+${comm_mk}  Core lattice         \n${core_lattice}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
 ${comm_mk}  Shielding            \n${shielding_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
@@ -484,11 +565,13 @@ ${comm_mk}  ------------------------------  End of file  -----------------------
     input_str = input_tmpl.substitute(core_level_cells       = cell_core_lvl,
                                       core_level_surfs       = surf_core_lvl,
                                       reactor_level_cells    = cell_reactor_lvl,
+                                      core_lattice           = active_core_lattice,
                                       shielding_cells        = cell_shielding,
                                       shielding_surfs        = surf_shielding,
                                       outside_world_cells    = cell_outside_wrld,
                                       reactor_level_surfaces = surf_reactor_lvl,
                                       material_card          = materials_card,
+                                      fuel_data              = active_core_data,
                                       burn_card              = burnup_card,
                                       kcode                  = kcode,
                                       mode                   = mode,

@@ -9,9 +9,9 @@ new_matlib = MaterialLibrary()
 
 for material in material_dict.keys():
     if material != 'void':
-        hdf5_mat = matlib[material]
-        hdf5_mat = hdf5_mat.expand_elements()
-        hdf5_mat.metadata['name'] = material
-        new_matlib[material] = hdf5_mat
+        pyne_obj = matlib[material]
+        JSON_mat = pyne_obj.expand_elements()
+        JSON_mat.metadata['name'] = material
+        new_matlib[material] = JSON_mat
 
-new_matlib.write_hdf5('SCW_materials.h5')
+new_matlib.write_json('SCW_materials.json')

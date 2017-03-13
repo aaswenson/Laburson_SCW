@@ -1,7 +1,12 @@
 import material_data as md
+import numpy as np
+import fuel_comp as fc
 import computed_data as cd
 comment_EOL = '$'
 comment_mark = 'c'
+
+fuel_data = fc.iterate_fuel_manifest()
+pyne_fuels = fc.make_fuel_composition(fuel_data)
 
 def cut_line(split_str, undiv_str, comment):
     """Cut a string to meet maximum length of a line for MCNP.
@@ -124,27 +129,31 @@ def apply_MCNP_operator(operator,items,state):
         # rh = right hand, lh = left hand
         rh_p = ")"
         lh_p = "("
+    
     return lh_p + delimiter[operator].join(items) + rh_p
 
-def write_cell_card(number, data, mat=0):
+def write_cell_card(number, data):
     cell_list    = []
-    
-    if 'fuel' in data.keys():
-        density = mat.density
-        
-    else: 
-        density = -cd.pyne_mats[cell_data['material'].density
     for idx, cell in enumerate(data):
+        if 'fuel' in cell.keys():
+            if cell['fuel']:
+                cell['mat_num'] = cell['univ']
+                mat = pyne_fuels[cell['material']]
+
+            else:
+                mat = cd.pyne_mats[cell['material']]
+                cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
+        else:
+            mat = cd.pyne_mats[cell['material']]
+            cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
+        density = mat.density
         cell_list += make_cell_card(number + idx, cell, density)
-    
-    return ' '.join(cell_list)
+    cell_str = ''.join(cell_list)
+    return cell_str
     
 
 def make_cell_card(number, cell_data, density):
-    
-
-
-    
+     
     # Check if it's void cell.
     if cell_data['material'] == 'void':
         cell_str = "{0} 0 ".format(number)
@@ -154,7 +163,7 @@ def make_cell_card(number, cell_data, density):
                                          density)
 
     # Make a cell geometry with given surface arguments.
-    cell_str += build_surface_tree(cell_data['surf_list'])[0]
+    cell_str += build_surface_tree(cell_data['surfs'])[0]
 
     # Check if it has volume entry.
     if cell_data['vol']:
@@ -170,7 +179,7 @@ def make_cell_card(number, cell_data, density):
         cell_str += " u={0}".format(cell_data['univ'])
 
     # Write importance.
-    cell_str += "imp:n= {0}".format(cell_data['imp'])        
+    cell_str += " imp:n={0}".format(cell_data['imp'])        
     # Make list of strings to satisfy the limit of line length.
     cell_list = cut_line(' ', cell_str, cell_data['comment'])
     
@@ -211,8 +220,9 @@ def write_material_card(material_name):
         data_list += cut_line('    ', mt_str, 'Thermal Treatment')
     return ' '.join(data_list)
 
-def write_fuel_data(pyne_mat,material_num):
-    pyne_mat = pyne_mat.expand_elements()
+def write_fuel_data(mat, material_num):
+    unexpanded_mat = pyne_fuels[mat]
+    pyne_mat = unexpanded_mat.expand_elements()
     del pyne_mat['8018']
     pyne_mat.metadata['mat_number'] = material_num
 #   pyne_mat.metadata['table_ids'] = XS_library
@@ -302,32 +312,61 @@ def make_burnup_card():
     return burn_str
 
 
-def convert_core_lattice(water_bundle):
+def convert_core_lattice(lattice_map, water_bundle):
+    
 
-    lattice_map = import_core_map()
     row_length = []
     for row in lattice_map:
         row_length.append(len(row))
 
     req_length = max(row_length)
+    
+    x_extent = int(req_length/2) + (req_length % 2 > 0) 
+    y_extent = int(len(lattice_map)/2) + (len(lattice_map) % 2 > 0)
     formatted_lattice_map = ''
     Top = True
-    for row in lattice_map:
-        print len(row)
-        row_str = ' '.join([str(i) for i in row])
-        n_water_bund = req_length - len(row)  
+
+    for row, bundles in enumerate(lattice_map):
+        row_str = ' '.join([str(1000*(row + 1) + col) for col, bundle in
+            enumerate(bundles)])
+        n_water_bund = req_length - len(bundles)  
         added_water = np.repeat(water_bundle, n_water_bund).tolist()
         water_str = ' '.join([str(i) for i in added_water])
-        if (Top == True) and (len(row) < req_length):
-            formatted_row = "{0} {1} {2} {0}\n".format(water_bundle, water_str, row_str)
-        elif len(row) == req_length:
-            formatted_row = "{0} {1} {0}\n".format(water_bundle, row_str, water_bundle)
+    
+        if (Top == True) and (len(bundles) < req_length):
+            formatted_row = "{0} {1} {2} {0}".format(water_bundle, water_str, row_str)
+        elif len(bundles) == req_length:
+            formatted_row = "{0} {1} {0}".format(water_bundle, row_str, water_bundle)
             Top = False
         else:
-            formatted_row = "{0} {1} {2} {0}\n".format(water_bundle, row_str, water_str)
-        formatted_lattice_map += formatted_row.replace('W', water_bundle)
-        
-    return formatted_lattice_map
+            formatted_row = "{0} {1} {2} {0}".format(water_bundle, row_str, water_str)
+    
+        formatted_lattice_map += formatted_row.replace('W', water_bundle) 
+    
+    formatted_lattice_map += ' imp:n=1'
+    return formatted_lattice_map, x_extent, y_extent
 
 
+def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent):
+    
+    core_lattice_str = "{0} 0 {1} u={2} lat=2 fill=-{3}:{3} -{4}:{4} 0:0\n         {5}"\
+                        .format(cell, 
+                                surf, 
+                                univ, 
+                                x_extent, 
+                                y_extent,
+                                formatted_lattice_map)
+    lat_list = cut_line(' ', core_lattice_str, '')
+    lat_str  = ''.join(lat_list)
+    return lat_str
 
+def like_but(base_cell, univ, water):
+
+    if water == False:
+        mat = 'mat='+ str(univ)
+    else:
+        mat = ''
+    cell_str = "{0} like {1} but u={0} {2} imp:n=1\n".format(univ,
+            base_cell, mat)
+
+    return cell_str
