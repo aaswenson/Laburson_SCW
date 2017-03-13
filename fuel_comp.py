@@ -45,7 +45,7 @@ def make_fuel_composition(fuel_data):
         A_fuel  = 3.1415*(D_fuel*D_fuel)/4
         A_clad  = A_pin - A_fuel
         A_mod   = A_cell - A_pin
-
+    
         frac_fuel = A_fuel/A_cell
         frac_clad = A_clad/A_cell
         frac_mod  = A_mod/A_cell

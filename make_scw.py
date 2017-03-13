@@ -65,7 +65,6 @@ def make_fuel_regions():
     formatted_core_map, row, col = wc.convert_core_lattice(core_map, '1000')
     
     core_map_save = cd.import_core_map()
-    print core_map_save
     bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map_save)
     bundle_surfs += string.surf([
         {'comment' : 'bundle rhp',
@@ -152,7 +151,7 @@ def copy_bundle(bundle, mat, masters):
     if mat != 'W':
         water = False
         data = wc.write_fuel_data(mat, univ)
-        cell = wc.like_but(base_cell, univ, water)
+        cell = wc.like_but(base_cell, univ, water, 84177.6)
     else:
         cell = ''
         data = ''
@@ -170,7 +169,7 @@ def make_bundle(mat, fuel, univ):
          'surfs'    : -401,
          'material' : mat,
          'imp'      : 1, 
-         'vol'      : 1500,
+         'vol'      : 84177.6,
          'univ'     : univ,
          'fill'     : None,
          'lat'      : None}

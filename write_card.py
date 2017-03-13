@@ -262,10 +262,7 @@ def make_burnup_card():
         specified on a material specification card.
 
     Arguments:
-        fuel_id (int)[#]: Fuel ID number of a pin.
-        rad_div (int)[#]: Number of radial divisions in a pin active region.
-        axi_div (int)[#]: Number of axial divisions in a pin active region.
-
+        none
     Returns:
         burn_str: Burnup material card strings.
 
@@ -276,37 +273,27 @@ def make_burnup_card():
                   # Fraction of total power applied to each burn step.
                   "pfrac": '1 9R',
                   # Total recoverable fission system power. [MW]
-                  "power": 1341,
+                  "power": '1341',
                   "bopt": '1 14 -1',  # Output control parameters.
-                  "comment": "Burnup_input"}
+                  }
 
-    for key in sorted(burn_input.keys(), reverse=True):
-        if key == 'time':
-            burn_str += " time={0}".format(burn_input[key])
-        elif key == 'pfrac':
-            burn_str += " pfrac={0}".format(burn_input[key])
-        elif key == 'power':
-            burn_str += " power={0}".format(burn_input[key])
-        elif key == 'bopt':
-            burn_str += " bopt={0}".format(burn_input[key])
-        else:
-            continue
+    for key in sorted(burn_input.keys(), reverse = True):
 
-    burn_str = ''.join(cut_line(' ', burn_str, burn_input["comment"]))
+        burn_str += "{0}={1} ".format(key, burn_input[key])
 
+    core_map = cd.import_core_map()
+    bundle_map = cd.get_master_bundles(core_map)[1]
+    
     # Write material entries.
-    burn_mat = '      mat='  # Initialize string to write material entries.
-
-    file_obj = open('fuel_ids.csv')
-    fuel_ids = file_obj.readlines()
-    del fuel_ids[0]
-
-    for fuel_region in fuel_ids:
-
-        burn_mat += fuel_region.split(',')[1] + ' '
-    file_obj.close()
+    burn_mat = '\n        mat='  # Initialize string to write material entries.
+    
+    for fuel_id in sorted(bundle_map):  # For all fuel ID numbers.
+        if bundle_map[fuel_id] != 'W':
+            base_mat_id = 1000*(fuel_id[0] + 1) + fuel_id[1]
+            burn_mat += "  {0}".format(base_mat_id) 
     burn_str += ''.join(cut_line('  ', burn_mat, 'burn_mat'))
-    # Write omit entries.
+    
+
     # ZAIDs to be omitted.
     omit_list = [66159, 67163, 67164, 67166, 68163, 68165, 68169, 69166, 69167, 69171, 69172, 69173, 70168, 70169, 70170, 70171, 70172, 70173, 70174,
                  6014, 7016, 39087, 39092, 39093, 40089, 40097, 41091, 41092, 41096, 41097, 41098, 41099, 42091, 42093, 70175, 70176, 71173, 71174,
@@ -316,7 +303,7 @@ def make_burnup_card():
     omit_str = ''  # Initialize string to write omit entries.
 
     for ZAID in omit_list:
-        omit_str += " {0}".format(ZAID)
+        omit_str += "{0} ".format(ZAID)
 
     burn_omit = "      omit= -1 {0} {1}".format(len(omit_list), omit_str)
 
@@ -330,7 +317,7 @@ def convert_core_lattice(lattice_map, water_bundle):
     req_length = max(len(row) for row in lattice_map)
 
     x_extent = int(req_length / 2) + (req_length % 2 > 0)
-    y_extent = int(len(lattice_map) / 2) + (len(lattice_map) % 2 > 0)
+    y_extent = int(len(lattice_map) / 2) + (len(lattice_map) % 2 > 0) - 1
 
     formatted_lattice_map = ''
     Top = True
@@ -376,13 +363,17 @@ def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent
     return lat_str
 
 
-def like_but(base_cell, univ, water):
+def like_but(base_cell, univ, water, vol):
 
     if water == False:
         mat = 'mat=' + str(univ)
+    if vol:
+        vol = 'vol=' + str(vol)
     else:
         mat = ''
-    cell_str = "{0} like {1} but u={0} {2} imp:n=1\n".format(univ,
-                                                             base_cell, mat)
+    cell_str = "{0} like {1} but u={0} {2} {3} imp:n=1\n".format(univ,
+                                                                 base_cell,
+                                                                 mat,
+                                                                 vol)
 
     return cell_str
