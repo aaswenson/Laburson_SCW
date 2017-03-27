@@ -79,8 +79,8 @@ def make_fuel_regions():
     lattice  += string.cell(501, [
                 {'fuel'     : None,
                  'comment'  : 'Active_core',
-                 'surfs'    : [([-501, -601, 605, 606, 607],[-610, 605, 604,
-                     -501, 606, 607])],
+                 'surfs'    : [([-501, -601, 605, 606, -607],[-610, 605, 604,
+                     -501, 606, -607])],
                  'material' : 'void',
                  'imp'      : 1,
                  'univ'     : None,
@@ -223,8 +223,8 @@ def make_core_shroud():
 
     core_shroud_cell = string.cell(600,[
         {'comment'  : 'Core_shroud', 
-         'surfs'    : [([-802, -602, 603, 604, 606, 607],[601, -604, -602, 605,
-             606, 607])],
+         'surfs'    : [([-802, -602, 603, 604, 606, -607],[601, -604, -602, 605,
+             606, -607])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1,
          'vol'      : None,
@@ -274,7 +274,7 @@ def make_reflector():
 
     reflector_cell = string.cell(650, [
         {'comment'  : 'reflector',
-         'surfs'    : [-802, 610, -501, 605, 606, 607],
+         'surfs'    : [-802, 610, -501, 605, 606, -607],
          'material' : 'Carbon, Graphite (reactor grade)',
          'imp'      : 1,
          'vol'      : None,
@@ -308,9 +308,9 @@ def make_core_level():
 
     core_water_cell = string.cell(700,[
         {'comment'  : 'Core Level', 
-         'surfs'    : [([-802, 602,-803, 606, 607],[803, -805, 606, 607], [-602,
-             501, -601, 606, 607], [-603, 501, -802, 604, 606, 607],[-605, -802,
-                 804, 606, 607], [-804, -802, -807, 606, 607])],
+         'surfs'    : [([-802, 602,-803, 606, -607],[803, -805, 606, -607], [-602,
+             501, -601, 606, -607], [-603, 501, -802, 604, 606, -607],[-605, -802,
+                 804, 606, -607], [-804, -802, -807, 606, -607])],
          'material' : 'Water, Liquid',
          'imp'      : 1,
          'vol'      : None,
@@ -362,8 +362,8 @@ def make_pressure_vessel():
 
     pressure_vessel_cell = string.cell(800,[
         {'comment'  : 'Pressure Vessel', 
-            'surfs'    : [([-801, 802, -803, 804, 606, 607], [-806, 805, 803,
-                606, 607], [-808, 807, -804, 606, 607])],
+            'surfs'    : [([-801, 802, -803, 804, 606, -607], [-806, 805, 803,
+                606, -607], [-808, 807, -804, 606, -607])],
          'material' : 'Steel, Stainless 304',
          'imp'      : 1,
          'vol'      : None,
@@ -423,7 +423,7 @@ def make_shielding():
     
     shielding_cell = string.cell(900,[
         {'comment'  : 'Concrete Shielding',
-         'surfs'    : [-900, 801, -902, 903, 806, 606, 607],
+         'surfs'    : [-900, 801, -902, 903, 806, 606, -607],
          'material' : 'Concrete, Portland',
          'imp'      : 1,
          'vol'      : None,
@@ -432,8 +432,8 @@ def make_shielding():
          'lat'      : None
          } ,
         {'comment'  : 'Water Shielding',
-         'surfs'    : [([-801, 806, -902, 803, 606, 607],[-801, 808, 903, -804,
-             606, 607])],
+         'surfs'    : [([-801, 806, -902, 803, 606, -607],[-801, 808, 903, -804,
+             606, -607])],
          'material' : 'Water, Liquid',
          'imp'      : 1,
          'vol'      : None,
@@ -477,7 +477,7 @@ def make_outside_world():
 
     outside_world_cell = string.cell(990,[
         {'comment'  : 'Outside World', 
-         'surfs'    : [(-606, -607, [900, 903, -902, 606, 607], 902, -903)],
+         'surfs'    : [(-606, 607, [900, 903, -902, 606, -607], 902, -903)],
          'material' : 'void',
          'imp'      : 0,
          'vol'      : None,
