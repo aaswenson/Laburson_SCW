@@ -1,10 +1,12 @@
 c  -------------------------------  CELL CARD  ------------------------------  c
 c  Core level           
 c    Core Shroud                 
-600 80000 8.0 ((-802 -602 603 604):(601 -604 -602 605)) imp:n=1     $Core_shroud
+600 80000 8.0 ((-802 -602 603 604 606 607):(601 -604 -602 605 606   $Core_shroud
+         607)) imp:n=1                                              $Core_shroud
 c    Core Water                  
-700 1 0.998207 ((-802 602 -803):(803 -805):(-602 501 -601):(-603     $Core Level
-         501 -802 604):(-605 -802 804):(-804 -802 -807)) imp:n=1     $Core Level
+700 1 0.998207 ((-802 602 -803 606 607):(803 -805 606 607):(-602     $Core Level
+         501 -601 606 607):(-603 501 -802 604 606 607):(-605 -802    $Core Level
+         804 606 607):(-804 -802 -807 606 607)) imp:n=1              $Core Level
 c    Active Core                 
 7005 7005 -1.0 -401 vol=84177.6 u=7005 imp:n=1                                  
 2002 2002 -1.0 -401 vol=84177.6 u=2002 imp:n=1                                  
@@ -273,7 +275,7 @@ c    Active Core
 22007 like 2002 but u=22007 mat=22007 vol=84177.6 imp:n=1
 22008 like 2002 but u=22008 mat=22008 vol=84177.6 imp:n=1
 c    Reflector Region            
-650 2 1.7 -802 606 -501 605 imp:n=1                                   $reflector
+650 2 1.7 -802 610 -501 605 606 607 imp:n=1                           $reflector
 c
 c  Core lattice         
 500 0 -500 u=500 lat=2 fill=-11:11 -11:11 0:0
@@ -320,19 +322,20 @@ c  Core lattice
          1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000  
          1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000 1000       
          imp:n=1                                                                
-501 0 ((-501 -601 605):(-606 605 604 -501)) fill=500 imp:n=1        $Active_core
+501 0 ((-501 -601 605 606 607):(-610 605 604 -501 606 607))         $Active_core
+         fill=500 imp:n=1                                           $Active_core
 c
 c  Reactor level        
-800 80000 8.0 ((-801 802 -803 804):(-806 805 803):(-808 807     $Pressure Vessel
-         -804)) imp:n=1                                         $Pressure Vessel
+800 80000 8.0 ((-801 802 -803 804 606 607):(-806 805 803 606    $Pressure Vessel
+         607):(-808 807 -804 606 607)) imp:n=1                  $Pressure Vessel
 c
 c  Shielding            
-900 90000 2.3 -900 801 -902 903 806 imp:n=1                  $Concrete Shielding
-901 1 0.998207 ((-801 806 -902 803):(-801 808 903 -804))        $Water Shielding
-         imp:n=1                                                $Water Shielding
+900 90000 2.3 -900 801 -902 903 806 606 607 imp:n=1          $Concrete Shielding
+901 1 0.998207 ((-801 806 -902 803 606 607):(-801 808 903 -804  $Water Shielding
+         606 607)) imp:n=1                                      $Water Shielding
 c
 c  Outside World level  
-990 0 (-903:902:(900 903 -902)) imp:n=0                           $Outside World
+990 0 (-606:-607:(900 903 -902 606 607):902:-903) imp:n=0         $Outside World
 
 c  -----------------------------  SURFACE CARD  -----------------------------  c
 c  Core level           
@@ -342,12 +345,14 @@ c    Core Shroud
 603 PZ 200                                           $Shroud_upper_extent_bottom
 604 CZ 101                                                      $TC_shroud_outer
 605 PZ -150                                                       $Shroud_bottom
++606 PY 0                                                            $x_symmetry
++607 PX 0                                                            $y_symmetry
 c                                 
 501 PZ 150                                                    $Upper Active Core
 401 SO 1000                                                          $Bundle_rpp
 500 rhp 0 0 -150 0 0 300 9 0                                         $bundle rhp
 c                                 
-606 CZ 176                                                   $Graphite reflector
+610 CZ 176                                                   $Graphite reflector
 c
 c  Reactor level        
 801 CZ 276                                                             $Outer_PV
