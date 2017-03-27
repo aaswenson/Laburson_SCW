@@ -184,7 +184,7 @@ def iterate_cell_cards(number, data):
         else:
             mat = cd.pyne_mats[cell['material']]
             cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
-        density = mat.density
+        density = -mat.density
       
         cell_list += write_cell_card(number + idx, cell, density)
     # concatenate all cell lists into one string
