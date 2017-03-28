@@ -1,0 +1,44 @@
+# Original Design, MOX blanket
+
+                      W M M M W U U U U U U U     W W W W W W W W W  
+                       W M M M W U U U U U U     W W W W W W W W W 
+                        M M M M W U U U U U U     W W W W W W W W 
+                         M M M W W U U U U U     W W W W W W W W 
+                          M M M W W U U U U U     W W W W W W W 
+                           M M M M W U U U U     W W W W W W W 
+                            M M M M W W W W W     W W W W W W 
+                             M M M M M M W W     W W W W W W 
+                              M M M M M M M W     W W W W W
+                               W M M M M M M     W W W W W
+                                W W M M M M M     W W W W
+                                 W W W W W W     W W W W
+
+
+# Inverted, MOX in center
+
+                      W U U U W M M M M M M M     W W W W W W W W W  
+                       W U U U W M M M M M M     W W W W W W W W W 
+                        U U U U W M M M M M M     W W W W W W W W 
+                         U U U W W M M M M M     W W W W W W W W 
+                          U U U W W M M M M M     W W W W W W W 
+                           U U U U W M M M M     W W W W W W W 
+                            U U U U W W W W W     W W W W W W 
+                             U U U U U U W W     W W W W W W 
+                              U U U U U U U W     W W W W W
+                               W U U U U U U     W W W W W
+                                W W U U U U U     W W W W
+                                 W W W W W W     W W W W
+# Interspersed MOX
+
+                      W M M M W U U U U U U U     W W W W W W W W W  
+                       W U M M W M U M U M U     W W W W W W W W W 
+                        M M M M W U U M U U U     W W W W W W W W 
+                         M U M W W M U U M U     W W W W W W W W 
+                          M M M W W U U U U U     W W W W W W W 
+                           M U M M W U U M U     W W W W W W W 
+                            M M M M W W W W W     W W W W W W 
+                             M U M M M M W W     W W W W W W 
+                              M M M M M M M W     W W W W W
+                               W U M M M M M     W W W W W
+                                W W M M M M M     W W W W
+                                 W W W W W W     W W W W
