@@ -1,3 +1,25 @@
+# Fuel pin dimensions 
+pins = {'UOX_pin': {
+    'pitch': 1.2,
+    'PD': 1.25,
+    'clad_th': 0.06
+                   },
+    'MOX_pin': {
+        'pitch': 1.2,
+        'PD': 1.25,
+        'clad_th': 0.06
+                },   
+    'CR': {
+        'meat_radius': 0.55,
+        'guide_tube_th': 0.01
+          }
+        }
+
+master_pins = {'UOX_pin' : 10,
+               'MOX_pin' : 20,
+               'CR' : 30
+              }
+
 # Pressure Vessel Data
 PV_thickness    = 50
 PV_height       = 600

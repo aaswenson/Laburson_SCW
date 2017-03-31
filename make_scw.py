@@ -2,7 +2,9 @@ import write_card as wc
 import computed_data as cd
 import material_data as md
 import fuel_comp as fc
+from assembly_maps import assemblies
 from string import Template
+
 class mcnp_card():
     """Class to write MCNP cards.
 
@@ -94,54 +96,74 @@ def make_fuel_regions():
 def iterate_bundles(core_map):
     """Read through all fuel materials and write surf, cell, and material cards.
     """
-    string = mcnp_card()
-    bundle_surfs = string.surf([
-        {'comment' : 'Bundle_rpp',
-         'type'    : 'SO',
-         'inputs'  : [cd.bundle_radius],
-         'number'  : 401}
-        ])
     
-    master_bundles, bundle_map = cd.get_master_bundles(core_map)
-    [ bundle_cells, 
-      bundle_data, 
-      master_bundles ]  = make_master_bundles(master_bundles)
+    for assembly in core_map:
 
-    for master in master_bundles.values():
-        del bundle_map[master]
-    for bundle in sorted(bundle_map):
-        
-        cell, data = copy_bundle(bundle, bundle_map[bundle], master_bundles)
-        bundle_cells += cell
-        bundle_data  += data
-  
+        assembly_lattce = assemblies[assembly]
+
     return bundle_surfs, bundle_cells, bundle_data
 
-def make_master_bundles(master_bundles):
-    """Make the master bundle cells.
+def make_master_fuel_pin():
     
-    This function produces the cell cards for all unique bundles.
+    string = mcnp_card()
+    
+    master_pin_cell = ''
+    master_pin_surf = ''
 
-    Args: core_map (list) all fuel assemblies in the core.
+    for pin in cd.master_pins:
+    # make master surfaces
 
-    Returns: cell (str) cell card string
-             data (str) mat card string
-             master_bundles (dict) master bundles and locations.
-    """
-    cell_save = ''
-    data_save = ''
-    for bundle in master_bundles:
-        if bundle == 'W':
-            pass            
-        else:
-            mat = bundle
-            fuel = True
-        univ = 1000*(master_bundles[bundle][0] + 1) + master_bundles[bundle][1]
-        cell, data = make_bundle(mat, fuel, univ)
+        master_pin_surf += string.surf([
+        {'comment' : 'master_'+pin+'_meat',
+         'type'    : 'CZ',
+         'inputs'  : [cd.pins[pin]['meat_radius']],
+         'number'  : cd.master_pins[pin] + 1},
+
+        {'comment' : 'master_'+pin+'clad',
+         'type'    : 'CZ',
+         'inputs'  : [cd.pins[pin]['clad_radius']],
+         'number'  : cd.master_pins[pin] + 2}
+        ])
         
-        cell_save += cell
-        data_save += data
-    return cell_save, data_save, master_bundles
+        master_pin_cell += string.cell(10,[
+        {'comment'  : 'master_'+pin+'_meat',
+         'surfs'    : [-(cd.master_pins[pin] + 1), -501, 602],
+         'material' : 'void',
+         'imp'      : 0, 
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None}
+        ])
+        
+        master_pin_cell += string.cell(20,[
+        {'comment'  : 'master_'+pin+'_clad',
+         'surfs'    : [-(cd.master_pins[pin] + 2), cd.master_pins[pin] + 1, -501, 602],
+         'material' : 'Steel, Stainless 304',
+         'imp'      : 1, 
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None}
+        ])
+
+        # make master water slot
+
+        masters_pin_cell += string.cell(30, [
+        
+        {'comment'  : 'master_bundle_pin',
+         'surfs'    : -500,
+         'material' : 'Water, Liquid',
+         'imp'      : 1,
+         'vol'      : None,
+         'univ'     : None,
+         'fill'     : None,
+         'lat'      : None}
+        ])
+
+
+                
+    return master_pin_cell, master_pin_surf
 
 def copy_bundle(bundle, mat, masters):
 
@@ -546,6 +568,8 @@ def make_SCW():
 
     # Write cell and surface cards for each level of geometry.
     [cell_core_lvl, surf_core_lvl, active_core_lattice, active_core_data] = make_core_level()
+    master_cells, master_surfs                            =\
+    make_master_fuel_pin()
     [cell_reactor_lvl, surf_reactor_lvl]                  = make_pressure_vessel()
     [cell_shielding, surf_shielding]                      = make_shielding()
     cell_outside_wrld                                     = make_outside_world()
@@ -556,12 +580,14 @@ def make_SCW():
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
+${comm_mk}  Master Pins          \n${master_pin_cells}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
 ${comm_mk}  Core lattice         \n${core_lattice}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
 ${comm_mk}  Shielding            \n${shielding_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
+${comm_mk}  Master Pins          \n${master_pin_surfs}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}${comm_mk}
 ${comm_mk}  Shielding level      \n${shielding_surfs} 
@@ -576,7 +602,9 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(core_level_cells       = cell_core_lvl,
+    input_str = input_tmpl.substitute(master_pin_surfs       = master_surfs,
+                                      master_pin_cells       = master_cells,
+                                      core_level_cells       = cell_core_lvl,
                                       core_level_surfs       = surf_core_lvl,
                                       reactor_level_cells    = cell_reactor_lvl,
                                       core_lattice           = active_core_lattice,

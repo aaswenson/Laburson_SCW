@@ -27,10 +27,19 @@ def get_master_bundles(core_map):
                 master_bundles[bundle] = (row, col)
 
     return master_bundles, bundle_map
-# import core map, get master bundle map
 
+# import core map, get master bundle map
 core_map = import_core_map()
 [master_bundles, bundle_map] = get_master_bundles(core_map)
+
+# Fuel Pin Dimensions
+pins['UOX_pin']['meat_radius'] = 0.5 * pins['UOX_pin']['pitch'] /  pins['UOX_pin']['PD'] 
+pins['UOX_pin']['clad_radius'] = pins['UOX_pin']['meat_radius'] + pins['UOX_pin']['clad_th']
+
+pins['MOX_pin']['meat_radius'] = 0.5 * pins['MOX_pin']['pitch'] / pins['MOX_pin']['PD']
+pins['MOX_pin']['clad_radius'] = pins['MOX_pin']['meat_radius'] + pins['MOX_pin']['clad_th']
+
+pins['CR']['clad_radius'] = pins['CR']['meat_radius'] + pins['CR']['guide_tube_th']
 
 # Core Shroud Data
 Thermal_shroud_outer = TC_radius + Core_shroud_th
