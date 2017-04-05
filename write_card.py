@@ -398,7 +398,8 @@ def convert_core_lattice(lattice_map, water_bundle):
 
 
 def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent):
-
+    """Create 
+    """
     core_lattice_str = "{0} 0 {1} u={2} lat=2 fill=-{3}:{3} -{4}:{4} 0:0\n         {5}"\
         .format(cell,
                 surf,
@@ -411,17 +412,15 @@ def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent
     return lat_str
 
 
-def like_but(base_cell, univ, water, vol):
+def like_but(base_cell, univ, mat, vol, rho):
 
-    if water == False:
+    if mat:
         mat = 'mat=' + str(univ)
     if vol:
         vol = 'vol=' + str(vol)
-    else:
-        mat = ''
-    cell_str = "{0} like {1} but u={0} {2} {3} imp:n=1\n".format(univ,
-                                                                 base_cell,
-                                                                 mat,
-                                                                 vol)
+    if rho:
+        rho = 'rho=' + str(rho)
+    cell_str = "{0} like {1} but u={0} {2} {3} {4} imp:n=1\n"\
+               .format(univ, base_cell, mat, vol, rho)
 
     return cell_str

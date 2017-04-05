@@ -1,55 +1,54 @@
 
-assemblies = { 'UOX' : [
+assemblies = { 'U' : [
 
-[                       U U                      ],
-[                    U U U U U                   ],
-[                 U U U U U U U U                ], 
-[              U U U U U U U U U U U             ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[          U U U U U U U U U U U U U U U         ],
-[           U U U U U U U U U U U U U U          ],
-[              U U U U U U U U U U U             ],
-[                 U U U U U U U U                ], 
-[                    U U U U U                   ],
-[                       U U                      ]
+[                                   'U','U',                     ],
+[                             'U','U','U','U','U',                  ],
+[                       'U','U','U','U','U','U','U','U',               ], 
+[                 'U','U','U','U','U','U','U','U','U','U','U',            ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[          'U','U','U','U','U','U','U','U','U','U','U','U','U','U','U',        ],
+[           'U','U','U','U','U','U','U','U','U','U','U','U','U','U',         ],
+[                  'U','U','U','U','U','U','U','U','U','U','U',            ],
+[                        'U','U','U','U','U','U','U','U',               ], 
+[                              'U','U','U','U','U',                  ],
+[                                    'U','U'                      ]
+
+                        ],
+
+                'M' : [
+[                                   'M','M',                     ],
+[                             'M','M','M','M','M',                  ],
+[                       'M','M','M','M','M','M','M','M',               ], 
+[                 'M','M','M','M','M','M','M','M','M','M','M',            ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[          'M','M','M','M','M','M','M','M','M','M','M','M','M','M','M',        ],
+[           'M','M','M','M','M','M','M','M','M','M','M','M','M','M',         ],
+[                  'M','M','M','M','M','M','M','M','M','M','M',            ],
+[                        'M','M','M','M','M','M','M','M',               ], 
+[                              'M','M','M','M','M',                  ],
+[                                    'M','M'                      ]
 
                         ]
 
-                'MOX' : [
-
-[                       M M                      ],
-[                    M M M M M                   ],
-[                 M M M M M M M M                ], 
-[              M M M M M M M M M M M             ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[          M M M M M M M M M M M M M M M         ],
-[           M M M M M M M M M M M M M M          ],
-[              M M M M M M M M M M M             ],
-[                 M M M M M M M M                ], 
-[                    M M M M M                   ],
-[                       M M                      ]
-
-                        ]
-
-                }
+               }
 

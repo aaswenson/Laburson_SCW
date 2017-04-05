@@ -28,6 +28,10 @@ def get_master_bundles(core_map):
 
     return master_bundles, bundle_map
 
+def get_density(loc):
+    """Calculate density of water as function of axial position in the core.
+    """
+    return 0.9987
 # import core map, get master bundle map
 core_map = import_core_map()
 [master_bundles, bundle_map] = get_master_bundles(core_map)
