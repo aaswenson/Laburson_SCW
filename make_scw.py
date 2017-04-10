@@ -133,9 +133,7 @@ def make_master_bundles(master_bundles):
     cell_save = ''
     data_save = ''
     for bundle in master_bundles:
-        if bundle == 'W':
-            pass            
-        else:
+        if bundle != 'W':
             mat = bundle
             fuel = True
         univ = 1000*(master_bundles[bundle][0] + 1) + master_bundles[bundle][1]
@@ -155,9 +153,6 @@ def copy_bundle(bundle, mat, masters):
         water = False
         data = wc.write_fuel_data(mat, univ)
         cell = wc.like_but(base_cell, univ, water, 84177.6)
-    else:
-        cell = ''
-        data = ''
     
 
     return cell, data

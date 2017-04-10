@@ -31,7 +31,7 @@ def get_master_bundles(core_map):
 
 core_map = import_core_map()
 [master_bundles, bundle_map] = get_master_bundles(core_map)
-
+print master_bundles
 # Core Shroud Data
 Thermal_shroud_outer = TC_radius + Core_shroud_th
 FC_radius = Thermal_shroud_outer + FC_rad_thick

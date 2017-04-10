@@ -78,11 +78,13 @@ def make_fuel_composition(fuel_data):
 
         fuel_mod_pyne = Material()
         fuel_mod_pyne.from_atom_frac(fuel_ndens)
-        fuel_mod_pyne.density = cd.rho_fuel[fuel_type]
+    
         clad_mat = cd.pyne_mats['Steel, Stainless 304']
     
         homog_fuel = fuel_mod_pyne + clad_mat*frac_clad
-             
+        homog_fuel.density = cd.rho_fuel[fuel_type] * frac_fuel + \
+        cd.rho_fuel['W'] * frac_mod + clad_mat.density * frac_clad
+        
         pyne_fuels[data['type']] = homog_fuel
         
     return pyne_fuels
