@@ -31,8 +31,11 @@ material_dict =      { "Steel, Stainless 304"             :{'mat_num':80000, 'mt
 
 # some nominal densities for homogenous fuel compositions
 # from Duderstadt and Hamilton
-rho_UO2 = 10
-rho_H2O = 1
+
+rho_fuel = {'U' : 10,
+            'M' : 10,
+            'W' : 0.9987
+           }
 
 # from PyNE
 rho_SS = 8

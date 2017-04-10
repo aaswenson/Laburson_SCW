@@ -19,7 +19,7 @@ The following functions are contained in this model.
   * make_lattice_map
   * like_but
 """
-
+import copy
 import material_data as md
 import numpy as np
 import fuel_comp as fc
@@ -185,7 +185,6 @@ def iterate_cell_cards(number, data):
             mat = cd.pyne_mats[cell['material']]
             cell['mat_num'] = md.material_dict[cell['material']]['mat_num']
         density = -mat.density
-      
         cell_list += write_cell_card(number + idx, cell, density)
     # concatenate all cell lists into one string
     cell_str = ''.join(cell_list)
@@ -269,7 +268,7 @@ def iterate_data_card(category, data):
 
 def write_material_card(material_name):
     data = md.material_dict[material_name]
-    pyne_mat = cd.pyne_mats[material_name]
+    pyne_mat = copy.deepcopy(cd.pyne_mats[material_name])
     pyne_mat.metadata['comment'] = material_name
     del pyne_mat['8018']
     pyne_mat.metadata['mat_number'] = data['mat_num']
