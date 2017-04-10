@@ -71,18 +71,18 @@ def make_fuel_composition(fuel_data):
         # calculate fuel isotope num dens
         fuel_ndens = {}
         for isotope in fuel_afrac:
-            fuel_ndens[isotope] = frac_fuel*fuel_afrac[isotope]*6.022e23*cd.rho_UO2/(MW_fuel*1e24)
-        fuel_ndens['O'] = (frac_fuel*2*cd.rho_UO2/MW_fuel + frac_mod*cd.rho_H2O/(2*pyne_data.atomic_mass('H') + pyne_data.atomic_mass('O')))*6.022e-1
-        fuel_ndens['H'] = frac_mod*2*cd.rho_H2O*6.022e-1/(2*pyne_data.atomic_mass('H')+pyne_data.atomic_mass('O'))
+            fuel_ndens[isotope] = frac_fuel*fuel_afrac[isotope]*6.022e23*cd.rho_fuel['U']/(MW_fuel*1e24)
+        fuel_ndens['O'] = (frac_fuel*2*cd.rho_fuel['U']/MW_fuel + frac_mod*cd.rho_fuel['W']/(2*pyne_data.atomic_mass('H') + pyne_data.atomic_mass('O')))*6.022e-1
+        fuel_ndens['H'] = frac_mod*2*cd.rho_fuel['W']*6.022e-1/(2*pyne_data.atomic_mass('H')+pyne_data.atomic_mass('O'))
         # calculate atom fracs for homogenized fuel region
 
         fuel_mod_pyne = Material()
         fuel_mod_pyne.from_atom_frac(fuel_ndens)
-
+        fuel_mod_pyne.density = cd.rho_fuel[fuel_type]
         clad_mat = cd.pyne_mats['Steel, Stainless 304']
-
+    
         homog_fuel = fuel_mod_pyne + clad_mat*frac_clad
-        
+             
         pyne_fuels[data['type']] = homog_fuel
         
     return pyne_fuels

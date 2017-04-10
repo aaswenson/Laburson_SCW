@@ -3,6 +3,8 @@ import computed_data as cd
 import material_data as md
 import fuel_comp as fc
 from string import Template
+
+
 class mcnp_card():
     """Class to write MCNP cards.
 
