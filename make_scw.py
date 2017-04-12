@@ -4,6 +4,7 @@ import material_data as md
 import fuel_comp as fc
 from assembly_maps import assemblies
 from string import Template
+import copy
 
 axial_zones = 1
 
@@ -78,7 +79,8 @@ def make_fuel_regions():
     """
 
     string = mcnp_card()
-    core_map = cd.import_core_map()
+    core_map_save = cd.import_core_map()
+    core_map = copy.deepcopy(core_map_save)
     formatted_core_map, row, col = wc.convert_core_lattice(core_map, '1000')
     
     bundle_surfs, bundle_cells, bundle_data = iterate_bundles(core_map_save)
@@ -119,148 +121,50 @@ def iterate_bundles(core_map):
 
     bundle_cells = ''
     bundle_data = ''
-    bundle_surfs = make_master_fuel_pin_surf()[1]
+    bundle_surfs = make_master_fuel_pin_surf()[0]
     
     # loop through bundles in the core
     for axial_div in range(0, axial_zones):
         for row, assembly_row in enumerate(core_map):
             for col, assembly in enumerate(assembly_row):
-
-                cells, data, lattice = make_bundle((row, col, axial_div),
+                if assembly != 'W':
+                    cells, data, lattice = make_bundle((row, col, axial_div),
                                                         assemblies[assembly])
-                bundle_cells += cells
-                bundles_cells += lattice
-                bundle_data += data
+                    bundle_cells += cells
+                    bundle_cells += lattice
+                    bundle_data += data
 
     return bundle_surfs, bundle_cells, bundle_data
-
-def make_master_fuel_pin_surf():
-    """Make master surfaces for fuel pins and control rods.
-    """
-    
-    for pin in cd.master_pins.keys():
-        master_surf_nums[pin_type] = {}
-
-    master_pin_surf = ''
-
-    for pin_type in cd.master_pins:
-        
-        # make master surfaces
-        master_pin_surf += string.surf([
-        {'comment' : 'master_'+master_pin+'_meat',
-         'type'    : 'CZ',
-         'inputs'  : [cd.pins[master_pin]['meat_radius']],
-         'number'  : cd.pins[pin_type] + 1},
-
-        {'comment' : 'master_'+master_pin+'clad',
-         'type'    : 'CZ',
-         'inputs'  : [cd.pins[master_pin]['clad_radius']],
-         'number'  : cd.pins[pin_type] + 2}
-        ])
-        # make master surface to define bundles.
-        master_pin_surf += string.surf([
-        {'comment' : 'bundle rhp',
-         'type'    : 'rhp',
-         'inputs'  : [0, 0, -150, 0, 0, 300, 9, 0],
-         'number'  : 1}
-        ])
-        master_surf_nums[pin_type]['meat'] = cd.pins[pin_type] + 1
-        master_surf_nums[pin_type]['clad'] = cd.pins[pin_type] + 2
-        master_surf_nums['bundle'] = 1
-
-    return master_pin_sur, master_surf_nums
-
-def make_master_fuel_pin(assembly, assembly_id, surfs):
-    
-    string = mcnp_card()
-    
-    master_pin_cell = ''
-    master_cells = {}
-    
-
-    for idx, master_pin in enumerate(assembly):
-        
-        if master_pin not in master_cells:
-
-            base_pin_num = assembly_id + idx * 10
-            # fuel meat cell
-            master_master_pin_cell += string.cell(base_pin_num ,[
-            {'comment'  : 'master_'+master_pin+'_meat',
-             'surfs'    : [-(surfs[master_pin]['meat']), -501, 602],
-             'material' : 'void',
-             'imp'      : 0, 
-             'vol'      : None,
-             'univ'     : None,
-             'fill'     : None,
-             'lat'      : None}
-            ])
-            
-            # cladding cell
-            master_master_pin_cell += string.cell(base_pin_num + 2 ,[
-            {'comment'  : 'master_'+master_pin+'_clad',
-             'surfs'    : [-(surfs[master_pin]['clad']), surfs[master_pin]['meat'], -501, 602],
-             'material' : 'Steel, Stainless 304',
-             'imp'      : 1, 
-             'vol'      : None,
-             'univ'     : None,
-             'fill'     : None,
-             'lat'      : None}
-            ])
-
-            # water cell
-            master_master_pin_cell += string.cell(base_pin_num + 3, [
-            
-            {'comment'  : 'master_bundle_master_pin',
-             'surfs'    : [-500, surfs[master_pin['clad']]],
-             'material' : 'Water, Liquid',
-             'imp'      : 1,
-             'vol'      : None,
-             'univ'     : None,
-             'fill'     : None,
-             'lat'      : None}
-            ])
-
-
-            master_cells[pin]['meat'] = base_pin_num 
-            master_cells[pin]['clad'] = base_pin_num + 2
-                
-    return master_pin_cell, master_cells
-
-def copy_pin(core_loc, assembly, master_cells):
-    """This function iterates through the fuel pins in nan assemly and writes
-    the corresponding 'like but' cell cards.
-    """
-
-    base_pin_num = (loc[0] * 10 + loc[1]) * 10000
-    rho = cd.get_density(loc)
-
-
-    base_clad = master_cells[pin]['clad']
-    base_meat = master_cells[pin]['meat']
-    cell += wc.like_but(base_clad, cell_num, None, rho)
-    cell += wc.like_but(base_meat, cell_num, )
-
-    return cell
 
 def make_bundle(core_loc, assembly):
     """This function builds the repeated lattice structure required to build a
     fuel assembly with fuel pins.
     """
-    
     string = mcnp_card()
+    
+    bundle_data = '' 
+
+    assembly_save = assembly
+    assembly = copy.deepcopy(assembly)
+    
     # get master surface numbers
-    master_surf_num = make_master_fuel_fuel_pin_surf()[1]
+    master_surf_num = make_master_fuel_pin_surf()[1]
     
     formatted_assembly_map, ncols, nrows = wc.convert_core_lattice(assembly, '1000')
+    
     # univ number calculated from bundle position
     bundle_univ = core_loc[0]*100 + core_loc[1]*10 + core_loc[2]
     lattice = wc.make_lattice_map(formatted_assembly_map,
-                                  bundle_univ, -master_surf_num['bundle'], nrows, ncols)
-    bundle_data = '' # this will need to be defined for master cells eventually
-    bundle_cells, master_cells = make_master_fuel_pin_cells(assembly,
-        bundle_univ, master_surf_num) 
+                                  bundle_univ, bundle_univ, 
+                                  -master_surf_num['bundle'],
+                                  nrows, ncols)
+    
+    # make water to fill the assembly
+    water_rho = cd.get_density(core_loc)
+    
+    bundle_cells, master_cells = make_master_fuel_pin_cells(assembly_save, bundle_univ, master_surf_num, water_rho) 
 
-    pin_cells, pin_data = iterate_pins(bundle_univ, assembly, master_cells)
+    pin_cells, pin_data = iterate_pins(bundle_univ, assembly_save, master_cells, water_rho)
     
     lattice  += string.cell(bundle_univ, [
                 {'fuel'     : None,
@@ -269,23 +173,174 @@ def make_bundle(core_loc, assembly):
                  'material' : 'void',
                  'imp'      : 0,
                  'univ'     : bundle_univ,
-                 'fill'     : univ,
+                 'fill'     : bundle_univ,
                  'vol'      : None,
                  'lat'      : None
                  }])
-
+    print pin_cells
     return pin_cells, pin_data, lattice
 
-def iterate_pins(bundle_univ, assembly, master_cells):
+def make_master_fuel_pin_surf():
+    """Make master surfaces for fuel pins and control rods.
+    """
+    string = mcnp_card()
+    master_surf_nums = {} 
+    for pin_type in cd.master_pins.keys():
+        master_surf_nums[pin_type] = {}
+
+    master_pin_surf = ''
+
+    for pin_type in cd.master_pins:
+        
+        # make master surfaces
+        master_pin_surf += string.surf([
+        {'comment' : 'master_'+pin_type+'_meat',
+         'type'    : 'CZ',
+         'inputs'  : [cd.pins[pin_type]['meat_radius']],
+         'number'  : cd.master_pins[pin_type] + 1},
+
+        {'comment' : 'master_'+pin_type+'clad',
+         'type'    : 'CZ',
+         'inputs'  : [cd.pins[pin_type]['clad_radius']],
+         'number'  : cd.master_pins[pin_type] + 2}
+        ])
+        # make master surface to define bundles.
+        master_pin_surf += string.surf([
+        {'comment' : 'bundle rhp',
+         'type'    : 'rhp',
+         'inputs'  : [0, 0, -150, 0, 0, 300, 9, 0],
+         'number'  : 1}
+        ])
+        
+        # make master surface to define water in bundles.
+        master_pin_surf += string.surf([
+        {'comment' : 'lattice water',
+         'type'    : 'SO',
+         'inputs'  : [cd.PV_height],    # arbitrarily large number
+         'number'  : 2}
+        ])
+
+        master_surf_nums[pin_type]['meat'] = cd.master_pins[pin_type] + 1
+        master_surf_nums[pin_type]['clad'] = cd.master_pins[pin_type] + 2
+        master_surf_nums['bundle'] = 1
+        master_surf_nums['W'] = 2
+    
+    return master_pin_surf, master_surf_nums
+
+def make_master_fuel_pin_cells(assembly, assembly_id, surfs, density):
+    string = mcnp_card()
+    master_pin_cell = ''
+    master_cells = {}
+
+    master_pins = sum(assembly, [])
+    for pin_type in master_pins:
+        master_cells[pin_type] = {}
+    
+    for row, master_row in enumerate(assembly):
+        for col, master_pin in enumerate(master_row):
+            if master_cells[master_pin] != None:
+                base_pin_num = (assembly_id * 1000 + row * 100 + col * 10) * 10
+                            
+                if master_pin == 'W':
+                    # write water cell
+                    cell_data = {'comment' : 'lattice_water',
+                                 'mat_num' : 1,
+                                 'material': 'Water, Liquid',
+                                 'surfs'   : [-surfs['W']],
+                                 'imp'     : 1,
+                                 'vol'     : None,
+                                 'fill'    : None,
+                                 'lat'     : None,
+                                 'univ'    : None
+                                }
+                    master_pin_cell = wc.write_cell_card(assembly_id, cell_data, density)
+                    master_cells['W'] = 1
+                else:
+                    # fuel meat cell
+                    master_pin_cell += string.cell(base_pin_num ,[
+                    {'comment'  : 'master_'+master_pin+'_meat',
+                     'surfs'    : [-(surfs[master_pin]['meat']), -501, 602],
+                     'material' : 'void',
+                     'imp'      : 0, 
+                     'vol'      : None,
+                     'univ'     : None,
+                     'fill'     : None,
+                     'lat'      : None}
+                    ])
+                    
+                    # cladding cell
+                    master_pin_cell += string.cell(base_pin_num + 2 ,[
+                    {'comment'  : 'master_'+master_pin+'_clad',
+                     'surfs'    : [-(surfs[master_pin]['clad']), surfs[master_pin]['meat'], -501, 602],
+                     'material' : 'Steel, Stainless 304',
+                     'imp'      : 1, 
+                     'vol'      : None,
+                     'univ'     : None,
+                     'fill'     : None,
+                     'lat'      : None}
+                    ])
+
+                    master_cells[master_pin]['meat'] = base_pin_num 
+                    master_cells[master_pin]['clad'] = base_pin_num + 2
+
+                    # water cell
+                    master_pin_cell += string.cell(1, [
+                    
+                    {'comment'  : 'master_bundle_master_pin',
+                     'surfs'    : [-500, surfs[master_pin]['clad']],
+                     'material' : 'Water, Liquid',
+                     'imp'      : 1,
+                     'vol'      : None,
+                     'univ'     : None,
+                     'fill'     : None,
+                     'lat'      : None}
+                    ])
+
+    return master_pin_cell, master_cells
+
+def copy_pin(pin_univ, pin, master_cells, rho=None):
+    """This function iterates through the fuel pins in nan assemly and writes
+    the corresponding 'like but' cell cards.
+    """
+    base_clad = master_cells[pin]['clad']
+    base_meat = master_cells[pin]['meat']
+
+    cell = wc.like_but(base_clad, pin_univ, None, None, rho)
+    cell += wc.like_but(base_meat, pin_univ, pin_univ,
+                        cd.pins[pin]['meat_vol'], rho)
+
+    return cell
+
+
+def iterate_pins(bundle_univ, assembly, master_cells, water_rho):
+    """Iterate assembly fuel pins.
+    
+    This function creates fuel pins in an fuel assembly.
+
+    Args: 
+        bundle_univ: (int) universe assembly is assigned.
+        assembly: (list) mapping of pins in the assembly.
+        master_cells: (dict) master cells used to create copy pins.
+    Returns:
+        pin_cells (str): cell cards for copy pins.
+        pin_data (str): material cards for copy pins.
+    """
+    pin_cells = ''
+    pin_data = ''
 
     for row, pin_row in enumerate(assembly):
         for col, pin in enumerate(pin_row):
+
             pin_univ = (bundle_univ * 1000 + row*100 + col*10) * 10
-            pin_cells += copy_pin(bundle_univ, (row, col), pin, master_cells,
-                    master_surfs)
-            pin_data += wc.write_fuel_data(pin, pin_univ)
+
+            if pin == 'W':
+                pin_cells += wc.like_but(master_cells['W'], pin_univ, None, None, water_rho)
+            else:
+                pin_cells += copy_pin(pin_univ, pin, master_cells)
+                pin_data += wc.write_fuel_data(pin, pin_univ)
     
     return pin_cells, pin_data
+
 def make_active_core():
     """Define the cards to build the active core regions.
     """
@@ -305,7 +360,7 @@ def make_active_core():
          'imp'     : 1
         }])
     
-
+    print bundle_surfs
     active_core_surfs += bundle_surfs
 
     return active_core_cells, active_core_surfs, active_core_data, lattice
@@ -650,8 +705,6 @@ def make_SCW():
 
     # Write cell and surface cards for each level of geometry.
     [cell_core_lvl, surf_core_lvl, active_core_lattice, active_core_data] = make_core_level()
-    master_cells, master_surfs                            =\
-    make_master_fuel_pin()
     [cell_reactor_lvl, surf_reactor_lvl]                  = make_pressure_vessel()
     [cell_shielding, surf_shielding]                      = make_shielding()
     cell_outside_wrld                                     = make_outside_world()
@@ -662,14 +715,12 @@ def make_SCW():
     # Write entire input file.
     input_tmpl = Template("""\
 ${comm_mk}  -------------------------------  CELL CARD  ------------------------------  ${comm_mk}
-${comm_mk}  Master Pins          \n${master_pin_cells}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_cells}${comm_mk}
 ${comm_mk}  Core lattice         \n${core_lattice}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_cells}${comm_mk}
 ${comm_mk}  Shielding            \n${shielding_cells}${comm_mk}
 ${comm_mk}  Outside World level  \n${outside_world_cells}
 ${comm_mk}  -----------------------------  SURFACE CARD  -----------------------------  ${comm_mk}
-${comm_mk}  Master Pins          \n${master_pin_surfs}${comm_mk}
 ${comm_mk}  Core level           \n${core_level_surfs}${comm_mk}
 ${comm_mk}  Reactor level        \n${reactor_level_surfaces}${comm_mk}
 ${comm_mk}  Shielding level      \n${shielding_surfs} 
@@ -684,9 +735,7 @@ ${comm_mk}
 ${comm_mk}  ------------------------------  End of file  -----------------------------  ${comm_mk}
 """)
 
-    input_str = input_tmpl.substitute(master_pin_surfs       = master_surfs,
-                                      master_pin_cells       = master_cells,
-                                      core_level_cells       = cell_core_lvl,
+    input_str = input_tmpl.substitute(core_level_cells       = cell_core_lvl,
                                       core_level_surfs       = surf_core_lvl,
                                       reactor_level_cells    = cell_reactor_lvl,
                                       core_lattice           = active_core_lattice,

@@ -1,10 +1,10 @@
 # Fuel pin dimensions 
-pins = {'UOX_pin': {
+pins = {'U': {
     'pitch': 1.2,
     'PD': 1.25,
     'clad_th': 0.06
                    },
-    'MOX_pin': {
+    'M': {
         'pitch': 1.2,
         'PD': 1.25,
         'clad_th': 0.06
@@ -15,8 +15,8 @@ pins = {'UOX_pin': {
           }
         }
 
-master_pins = {'UOX_pin' : 10,
-               'MOX_pin' : 20,
+master_pins = {'U' : 10,
+               'M' : 20,
                'CR' : 30
               }
 

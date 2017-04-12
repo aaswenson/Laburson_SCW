@@ -37,13 +37,26 @@ core_map = import_core_map()
 [master_bundles, bundle_map] = get_master_bundles(core_map)
 
 # Fuel Pin Dimensions
-pins['UOX_pin']['meat_radius'] = 0.5 * pins['UOX_pin']['pitch'] /  pins['UOX_pin']['PD'] 
-pins['UOX_pin']['clad_radius'] = pins['UOX_pin']['meat_radius'] + pins['UOX_pin']['clad_th']
+pins['U']['meat_radius'] = 0.5 * pins['U']['pitch'] /  pins['U']['PD'] 
+pins['U']['clad_radius'] = pins['U']['meat_radius'] + pins['U']['clad_th']
 
-pins['MOX_pin']['meat_radius'] = 0.5 * pins['MOX_pin']['pitch'] / pins['MOX_pin']['PD']
-pins['MOX_pin']['clad_radius'] = pins['MOX_pin']['meat_radius'] + pins['MOX_pin']['clad_th']
+pins['M']['meat_radius'] = 0.5 * pins['M']['pitch'] / pins['M']['PD']
+pins['M']['clad_radius'] = pins['M']['meat_radius'] + pins['M']['clad_th']
 
 pins['CR']['clad_radius'] = pins['CR']['meat_radius'] + pins['CR']['guide_tube_th']
+
+def calculate_pin_vol(pins):
+    """Calculate volume of clad and meat for fuel pins and CRs.
+    """
+
+    for element in pins:
+        
+        pins[element]['meat_vol'] = pins[element]['meat_radius'] * \
+        pins[element]['meat_radius'] * 3.1415 * Core_height
+
+    return pins
+
+pins = calculate_pin_vol(pins)
 
 # Core Shroud Data
 Thermal_shroud_outer = TC_radius + Core_shroud_th

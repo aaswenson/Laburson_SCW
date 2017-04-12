@@ -296,8 +296,7 @@ def write_general_data(data):
     elif data['category'] == 'kcode':
         data_str = "{0} {1} \n{2} {3}".format(
             'kcode', data['kcode'], 'ksrc', data['ksrc'])
-    else:
-        pass
+    
     return data_str
 
 
@@ -412,12 +411,14 @@ def make_lattice_map(formatted_lattice_map, univ, cell, surf, x_extent, y_extent
 
 
 def like_but(base_cell, univ, mat, vol, rho):
-
-    if mat:
+    mat = ''
+    vol = ''
+    rho = ''
+    if mat != None:
         mat = 'mat=' + str(univ)
-    if vol:
+    if vol != None:
         vol = 'vol=' + str(vol)
-    if rho:
+    if rho != None:
         rho = 'rho=' + str(rho)
     cell_str = "{0} like {1} but u={0} {2} {3} {4} imp:n=1\n"\
                .format(univ, base_cell, mat, vol, rho)
