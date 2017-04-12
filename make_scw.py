@@ -123,19 +123,46 @@ def iterate_bundles(core_map):
     bundle_data = ''
     bundle_surfs = make_master_fuel_pin_surf()[0]
     
+    bundle_location_data = {}
+    
     # loop through bundles in the core
-    for axial_div in range(0, axial_zones):
+    for axial_div in range(1, axial_zones + 1):
         for row, assembly_row in enumerate(core_map):
-            for col, assembly in enumerate(assembly_row):
-                if assembly != 'W':
-                    cells, data, lattice = make_bundle((row, col, axial_div),
-                                                        assemblies[assembly])
-                    bundle_cells += cells
-                    bundle_cells += lattice
-                    bundle_data += data
+            for col, assembly in enumerate(assembly_row): 
+                bundle_location_data[(row, col, axial_div)] = assembly
 
+    bundle_cells, bundle_data, master_bundles, bundle_location_data = get_master_bundles(bundle_location_data)
+    
+    for bundle in bundle_location_data:
+        assembly_id = bundle_location_data[bundle]
+        print master_bundles[assembly_id]
+    
     return bundle_surfs, bundle_cells, bundle_data
 
+def get_master_bundles(bundle_location_data):
+    """ This function builds master fuel assemblies to be repeated throughout
+    the core.
+    """
+    bundle_cells = ''
+    bundle_data = ''
+    master_bundles = {}
+    for bundle_coords in sorted(bundle_location_data):
+        assembly_id = bundle_location_data[bundle_coords] 
+        assembly = assemblies[assembly_id]
+        if assembly_id not in master_bundles:
+            cells, data, lattice = make_bundle(bundle_coords, assembly) 
+            univ = 1000 * bundle_coords[2] + 10 * bundle_coords[0] +\
+            bundle_coords[1] 
+            master_bundles[assembly_id] = univ
+            
+            bundle_cells += cells + lattice
+            bundle_data += data
+
+            del bundle_location_data[bundle_coords]
+            
+    return bundle_cells, bundle_data, master_bundles, bundle_location_data
+
+    
 def make_bundle(core_loc, assembly):
     """This function builds the repeated lattice structure required to build a
     fuel assembly with fuel pins.
@@ -177,7 +204,6 @@ def make_bundle(core_loc, assembly):
                  'vol'      : None,
                  'lat'      : None
                  }])
-    print pin_cells
     return pin_cells, pin_data, lattice
 
 def make_master_fuel_pin_surf():
