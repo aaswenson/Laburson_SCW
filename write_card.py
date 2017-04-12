@@ -358,7 +358,7 @@ def make_burnup_card():
     return burn_str
 
 
-def convert_core_lattice(lattice_map, water_bundle):
+def convert_core_lattice(lattice_map, bundle_ids):
 
     req_length = max(len(row) for row in lattice_map)
 
@@ -370,27 +370,24 @@ def convert_core_lattice(lattice_map, water_bundle):
 
     for row, bundles in enumerate(lattice_map):
         for col, bundle in enumerate(bundles):
-            if bundle == 'W':
-                bundles[col] = water_bundle
-            else:
-                bundles[col] = str(1000 * (row + 1) + col)
+            bundles[col] = str(bundle_ids[bundle])
         row_str = ' '.join(bundles)
         n_water_bund = req_length - len(bundles)
-        added_water = np.repeat(water_bundle, n_water_bund).tolist()
+        added_water = np.repeat(bundle_ids['W'], n_water_bund).tolist()
         water_str = ' '.join([str(i) for i in added_water])
 
         if (Top == True) and (len(bundles) < req_length):
             formatted_row = "{0} {1} {2} {0} ".format(
-                water_bundle, water_str, row_str)
+                str(bundle_ids['W']), water_str, row_str)
         elif len(bundles) == req_length:
             formatted_row = "{0} {1} {0} ".format(
-                water_bundle, row_str, water_bundle)
+                str(bundle_ids['W']), row_str)
             Top = False
         else:
             formatted_row = "{0} {1} {2} {0} ".format(
-                water_bundle, row_str, water_str)
+                str(bundle_ids['W']), row_str, water_str)
 
-        formatted_lattice_map += formatted_row.replace('W', water_bundle)
+        formatted_lattice_map += formatted_row.replace('W', str(bundle_ids['W']))
     formatted_lattice_map += ' imp:n=1'
     return formatted_lattice_map, x_extent, y_extent
 

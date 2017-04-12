@@ -46,9 +46,9 @@ def make_fuel_composition(fuel_data):
         A_clad  = A_pin - A_fuel
         A_mod   = A_cell - A_pin
     
-        frac_fuel = A_fuel/A_cell
-        frac_clad = A_clad/A_cell
-        frac_mod  = A_mod/A_cell
+        frac_fuel = 1 #A_fuel/A_cell
+        frac_clad = 0 #A_clad/A_cell
+        frac_mod  = 0 #A_mod/A_cell
 
         fuel_m    = {'U235'  : (1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*data['enrich_U']/pyne_data.atomic_mass('U235'),
                      'U238'  : (1 - data['mfrac_Pu'] - data['mfrac_Np'] - data['mfrac_Am'])*(1-data['enrich_U'])/pyne_data.atomic_mass('U238'),

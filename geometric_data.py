@@ -1,3 +1,4 @@
+axial_zones = 3
 # Fuel pin dimensions 
 pins = {'U': {
     'pitch': 1.2,
@@ -11,7 +12,8 @@ pins = {'U': {
                 },   
     'CR': {
         'meat_radius': 0.55,
-        'guide_tube_th': 0.01
+        'guide_tube_th': 0.01,
+        'pitch' : 1.2
           }
         }
 

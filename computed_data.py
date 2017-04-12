@@ -28,13 +28,24 @@ def get_master_bundles(core_map):
 
     return master_bundles, bundle_map
 
+def get_bundle_ids(core_map):
+    bundle_location_data = {}
+    # loop through bundles in the core
+    for axial_div in range(1, axial_zones + 1):
+        for row, assembly_row in enumerate(core_map):
+            for col, assembly in enumerate(assembly_row): 
+                bundle_location_data[(row, col, axial_div)] = assembly
+
+    return bundle_location_data
+
 def get_density(loc):
     """Calculate density of water as function of axial position in the core.
     """
     return 0.9987
 # import core map, get master bundle map
 core_map = import_core_map()
-[master_bundles, bundle_map] = get_master_bundles(core_map)
+
+bundle_id_map = get_bundle_ids(core_map)
 
 # Fuel Pin Dimensions
 pins['U']['meat_radius'] = 0.5 * pins['U']['pitch'] /  pins['U']['PD'] 
