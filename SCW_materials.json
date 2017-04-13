@@ -128,5 +128,20 @@
       "metadata" : {
          "name" : "Water, Liquid"
       }
+   },
+   "Zirconium" : {
+      "atoms_per_molecule" : -1.0,
+      "comp" : {
+         "Zr90" : 0.5070611756604113,
+         "Zr91" : 0.1118088752591929,
+         "Zr92" : 0.1727810156934970,
+         "Zr94" : 0.1789110425755960,
+         "Zr96" : 0.02943789081130281
+      },
+      "density" : 6.5060,
+      "mass" : 1.0,
+      "metadata" : {
+         "name" : "Zirconium"
+      }
    }
 }

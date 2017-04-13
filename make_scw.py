@@ -222,7 +222,8 @@ def make_master_fuel_pin_surf():
     master_pin_surf += string.surf([
     {'comment' : 'pin rhp',
      'type'    : 'rhp',
-     'inputs'  : [0, 0, -150, 0, 0, 300, cd.pins[pin_type]['pitch'], 0],
+     'inputs'  : [0, 0, -150 - cd.lattice_offset, 0, 0, 300 + 2 *\
+         cd.lattice_offset, cd.pins[pin_type]['pitch'], 0],
      'number'  : 400}
     ])
 
@@ -241,7 +242,7 @@ def make_master_fuel_pin_surf():
     master_pin_surf += string.surf([
     {'comment' : 'bundle rhp',
      'type'    : 'rhp',
-     'inputs'  : [0, 0, -150, 0, 0, 300, 9, 0],
+     'inputs'  : [0, 0, -150, 0, 0, 300, cd.assembly_pitch, 0],
      'number'  : 402}
     ])
 
@@ -251,7 +252,8 @@ def make_master_fuel_pin_surf():
     master_pin_surf += string.surf([
     {'comment' : 'bundle rhp',
      'type'    : 'rhp',
-     'inputs'  : [0, 0, -150, 0, 0, 300, cd.assembly_pitch + cd.lattice_offset, 0],
+     'inputs'  : [0, 0, -150 - cd.lattice_offset, 0, 0, 300 + 2 *\
+         cd.lattice_offset, cd.assembly_pitch + cd.lattice_offset, 0],
      'number'  : 403}
     ])
 
@@ -261,7 +263,7 @@ def make_master_fuel_pin_surf():
     master_pin_surf += string.surf([
     {'comment' : 'lattice water',
      'type'    : 'SO',
-     'inputs'  : [cd.PV_height],    # arbitrarily large number
+     'inputs'  : [20000],    # arbitrarily large number
      'number'  : 404}
     ])
 
@@ -324,7 +326,6 @@ def make_master_fuel_pin_cells(assembly_id, univ, surfs, density):
                      'lat'      : None
                     }])
                 
-                print pin_num
                 master_pin_data +=  wc.write_fuel_data(pin, pin_num)
 
                 master_pin_cells += string.cell(pin_num + 1,[
@@ -350,7 +351,7 @@ def make_master_fuel_pin_cells(assembly_id, univ, surfs, density):
             master_pin_cells += wc.write_cell_card(pin_num + 2,
                                                    water_cell_data, 
                                                    -density)[0]
-            master_cell_univ[pin] = univ 
+            master_cell_univ[pin] = pin_num 
         
     water_cell_data = {'material' : 'Water, Liquid',
                        'mat_num'  : 1,
@@ -410,7 +411,7 @@ def make_core_shroud():
         {'comment'  : 'Core_shroud', 
          'surfs'    : [([-802, -602, 603, 604, 606, -607],[601, -604, -602, 605,
              606, -607])],
-         'material' : 'Steel, Stainless 304',
+         'material' : 'Zirconium',
          'imp'      : 1,
          'vol'      : None,
          'univ'     : None,

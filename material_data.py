@@ -21,6 +21,7 @@ def load_pyne_matlib():
     return material_lib
 
 material_dict =      { "Steel, Stainless 304"             :{'mat_num':80000, 'mt':''},
+                       "Zirconium"                        :{'mat_num':80001, 'mt':''  },
                        "Water, Liquid"                    :{'mat_num':1, 'mt':'lwtr.20t'},
                        "Carbon, Graphite (reactor grade)" :{'mat_num':2, 'mt':'grph.20t'}, 
                        "Boron Carbide"                    :{'mat_num':3, 'mt':''},
